@@ -1,0 +1,2823 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Torn War Stats Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--
+      ARCHITECTURE: Modular Component-Based Dashboard
+      Principles: Separation of Concerns, DRY, KISS, YAGNI
+      
+      Modules:
+      1. Core - Config, State, EventBus
+      2. Utils - Formatters, DOM helpers
+      3. API - TornAPI client with caching
+      4. Components - Reusable UI components
+      5. Features - WarIntel, PlayerActivity
+      6. App - Main controller
+    -->
+    <style>
+      :root {
+        --bg: #0f1419;
+        --card-bg: #1a1f2e;
+        --accent: #3a8dde;
+        --accent2: #00c6ae;
+        --text: #e6eaf3;
+        --text-muted: #8b9bb4;
+        --border: #2d3748;
+        --error: #ff4d4f;
+        --success: #00c6ae;
+        --scrollbar-bg: #1a1f2e;
+        --scrollbar-thumb: #3a8dde;
+        --scrollbar-thumb-hover: #00c6ae;
+      }
+
+      /* Custom Scrollbar - Themed */
+      ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+      }
+      ::-webkit-scrollbar-track {
+        background: var(--scrollbar-bg);
+        border-radius: 5px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+        border-radius: 5px;
+        border: 2px solid var(--scrollbar-bg);
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+      }
+      ::-webkit-scrollbar-corner {
+        background: var(--scrollbar-bg);
+      }
+
+      /* Firefox scrollbar */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-bg);
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        font-family:
+          "Segoe UI",
+          system-ui,
+          -apple-system,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        margin: 0 0 8px 0;
+        font-weight: 600;
+        font-size: 1.8em;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .subtitle {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.95em;
+        margin-bottom: 24px;
+      }
+      .section-title {
+        font-size: 1.1em;
+        color: var(--accent2);
+        font-weight: 600;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+      .api-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 16px;
+      }
+      .api-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 16px;
+      }
+      .api-card h3 {
+        margin: 0 0 12px 0;
+        font-size: 1em;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .input-group {
+        margin-bottom: 10px;
+      }
+      .input-group label {
+        display: block;
+        font-size: 0.85em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+      }
+      input[type="text"],
+      input[type="password"],
+      input[type="number"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.95em;
+        outline: none;
+        transition: border-color 0.2s;
+      }
+      input:focus {
+        border-color: var(--accent);
+      }
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.95em;
+        outline: none;
+      }
+      select:focus {
+        border-color: var(--accent);
+      }
+      button {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9em;
+        font-weight: 500;
+        cursor: pointer;
+        transition:
+          opacity 0.2s,
+          transform 0.1s;
+      }
+      button:hover {
+        opacity: 0.9;
+      }
+      button:active {
+        transform: translateY(1px);
+      }
+      .btn-secondary {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 1;
+      }
+      .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.85em;
+      }
+      .btn-row {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+        flex-wrap: wrap;
+      }
+      .row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .row-gap {
+        gap: 8px;
+      }
+      .mt-2 {
+        margin-top: 8px;
+      }
+      .mt-3 {
+        margin-top: 12px;
+      }
+      .mb-2 {
+        margin-bottom: 8px;
+      }
+      .mb-3 {
+        margin-bottom: 12px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .spinner {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--accent2);
+        border-top: 2px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .status-msg {
+        font-size: 0.9em;
+        margin-top: 8px;
+        min-height: 1.4em;
+      }
+      .status-success {
+        color: var(--success);
+      }
+      .status-error {
+        color: var(--error);
+      }
+      .status-loading {
+        color: var(--text-muted);
+      }
+      .error {
+        color: var(--error);
+        padding: 12px;
+      }
+      .result-box {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 12px;
+        border: 1px solid var(--border);
+        max-height: 400px;
+        overflow: auto;
+      }
+      .result-box pre {
+        margin: 0;
+        white-space: pre-wrap;
+        font-family: "Consolas", "Monaco", monospace;
+        font-size: 0.85em;
+        line-height: 1.4;
+      }
+      .table-container {
+        overflow-x: auto;
+        margin-top: 12px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9em;
+      }
+      th,
+      td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+      th {
+        color: var(--accent);
+        font-weight: 600;
+        background: rgba(58, 141, 222, 0.1);
+      }
+      tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .metric {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        background: rgba(58, 141, 222, 0.15);
+        border-radius: 20px;
+        font-size: 0.85em;
+        margin: 2px;
+      }
+      .metric-label {
+        color: var(--text-muted);
+      }
+      .metric-value {
+        color: var(--accent2);
+        font-weight: 600;
+      }
+      .war-card {
+        background: linear-gradient(
+          135deg,
+          rgba(58, 141, 222, 0.1),
+          rgba(0, 198, 174, 0.05)
+        );
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 12px;
+      }
+      .factions-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .faction-card {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .faction-card:hover {
+        border-color: var(--accent);
+        background: rgba(58, 141, 222, 0.1);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(58, 141, 222, 0.2);
+      }
+      .faction-card:active {
+        transform: translateY(0);
+      }
+      .faction-card h4 {
+        margin: 0 0 8px 0;
+        color: var(--accent);
+      }
+      .faction-card.winner {
+        border-color: var(--success);
+        background: rgba(0, 198, 174, 0.1);
+      }
+      .faction-card.winner:hover {
+        border-color: var(--accent2);
+        background: rgba(0, 198, 174, 0.15);
+        box-shadow: 0 4px 12px rgba(0, 198, 174, 0.2);
+      }
+
+      /* War Overview Styles */
+      .war-overview {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .war-result-card {
+        background: linear-gradient(
+          135deg,
+          rgba(0, 198, 174, 0.2),
+          rgba(58, 141, 222, 0.2)
+        );
+        border: 2px solid var(--success);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+      }
+      .war-result-card .winner-badge {
+        font-size: 1.2em;
+        color: var(--success);
+        margin-bottom: 8px;
+      }
+      .war-result-card .winner-name {
+        font-size: 1.8em;
+        font-weight: 700;
+        color: var(--text);
+      }
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+      }
+      .metric-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+      }
+      .metric-card .metric-title {
+        font-size: 0.85em;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .metric-card .metric-value {
+        font-size: 1.6em;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .metric-card .metric-subtitle {
+        font-size: 0.8em;
+        color: var(--text-muted);
+      }
+      .factions-report {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .faction-stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .faction-stats .stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 0.85em;
+        font-weight: 500;
+      }
+      .faction-stats .stat.win {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+      }
+      .faction-stats .stat.loss {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+      }
+      .faction-stats .stat.respect {
+        background: rgba(58, 141, 222, 0.2);
+        color: var(--accent);
+      }
+      .war-details {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-top: 8px;
+      }
+      .war-details-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .war-details-row:last-child {
+        border-bottom: none;
+      }
+      .war-details-label {
+        color: var(--text-muted);
+      }
+      .war-details-value {
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 16px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 8px;
+        flex-wrap: wrap;
+      }
+      .tab {
+        padding: 8px 16px;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.9em;
+      }
+      .tab:hover {
+        color: var(--text);
+      }
+      .tab.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 768px) {
+        .grid-2,
+        .grid-3 {
+          grid-template-columns: 1fr;
+        }
+        .api-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .energy-bar,
+      .happy-bar,
+      .nerve-bar,
+      .life-bar {
+        height: 8px;
+        border-radius: 4px;
+        margin-top: 4px;
+      }
+      .energy-bar {
+        background: linear-gradient(90deg, #f59e0b, #d97706);
+      }
+      .happy-bar {
+        background: linear-gradient(90deg, #10b981, #059669);
+      }
+      .nerve-bar {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+      }
+      .life-bar {
+        background: linear-gradient(90deg, #3b82f6, #2563eb);
+      }
+      .bar-container {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+        height: 8px;
+        overflow: hidden;
+      }
+      .status-online {
+        color: #10b981;
+      }
+      .status-idle {
+        color: #f59e0b;
+      }
+      .status-offline {
+        color: #6b7280;
+      }
+      .status-fallen {
+        color: #ef4444;
+      }
+      .status-abroad {
+        color: #8b5cf6;
+      }
+
+      /* Div Name Labels */
+      [data-div-name] {
+        position: relative;
+      }
+      [data-div-name]::before {
+        content: attr(data-div-name);
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: rgba(58, 141, 222, 0.9);
+        color: #fff;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7em;
+        font-family: monospace;
+        opacity: 0;
+        transition: opacity 0.2s;
+        pointer-events: none;
+        z-index: 1000;
+      }
+      [data-div-name]:hover::before,
+      [data-div-name].show-name::before {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container" data-div-name="container">
+      <header data-div-name="header">
+        <h1>⚔️ Torn War Stats Dashboard</h1>
+        <div class="subtitle">
+          Complete Torn API v2 Explorer — Faction Wars, Attacks & Member
+          Analytics
+        </div>
+      </header>
+
+      <!-- API Key -->
+      <div class="card" data-div-name="API Key">
+        <div class="section-title">🔑 API Configuration</div>
+        <div class="row" style="flex-wrap: wrap">
+          <div style="flex: 1; min-width: 250px; position: relative">
+            <input
+              type="password"
+              id="apiKey"
+              placeholder="Enter your Torn API Key (Full Access)"
+              style="padding-right: 40px"
+            />
+            <button
+              type="button"
+              id="toggleKeyVisibility"
+              style="
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 4px;
+                font-size: 1.2em;
+              "
+              title="Show/Hide API Key"
+            >
+              👁️
+            </button>
+          </div>
+          <button id="saveKeyBtn">Save Key</button>
+        </div>
+        <div id="apiKeyStatus" class="status-msg"></div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="tabs" id="navTabs" data-div-name="Navigation Tabs">
+        <button class="tab active" data-tab="wars">🏆 Ranked Wars</button>
+      </div>
+
+      <!-- TAB 1: Ranked Wars -->
+      <div
+        id="tab-wars"
+        class="tab-content active"
+        data-div-name="Tab: Ranked Wars"
+      >
+        <div class="api-grid">
+          <!-- War Intelligence -->
+          <div
+            class="api-card"
+            style="border-color: var(--accent2); grid-column: 1 / -1"
+            data-div-name="War Intelligence"
+          >
+            <h3>� War Intelligence</h3>
+            <p
+              style="
+                color: var(--text-muted);
+                font-size: 0.85em;
+                margin: 0 0 12px 0;
+              "
+            >
+              Load your faction's ranked wars and select one to analyze.
+            </p>
+            <div class="btn-row">
+              <button id="loadWarsBtn">📜 Load My Wars</button>
+            </div>
+            <div id="warsListStatus" class="status-msg"></div>
+            <select id="warsList" class="mt-2 hidden">
+              <option value="">-- Select a war to analyze --</option>
+            </select>
+
+            <!-- War Result Preview (shown when war is selected) -->
+            <div
+              id="warPreview"
+              class="mt-2 hidden"
+              data-div-name="warPreview"
+              style="
+                margin-top: 12px;
+                padding: 16px;
+                background: linear-gradient(
+                  135deg,
+                  rgba(0, 198, 174, 0.1),
+                  rgba(58, 141, 222, 0.1)
+                );
+                border: 1px solid var(--border);
+                border-radius: 8px;
+              "
+            >
+              <div
+                style="
+                  font-size: 0.85em;
+                  color: var(--text-muted);
+                  margin-bottom: 12px;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+              >
+                Selected War
+              </div>
+              <div id="warPreviewContent"></div>
+            </div>
+
+            <div id="fullIntelStatus" class="status-msg"></div>
+          </div>
+        </div>
+
+        <!-- Faction Report -->
+        <div
+          id="factionReportSection"
+          class="card hidden"
+          data-div-name="Faction Report"
+        >
+          <div class="section-title">📊 Faction Report</div>
+          <div id="factionReportContent"></div>
+        </div>
+
+        <!-- Raw War Data -->
+        <div
+          id="rawWarDataSection"
+          class="card hidden"
+          data-div-name="Raw War Data"
+        >
+          <div class="section-title">📋 Raw War Data</div>
+          <div id="rawWarDataContent"></div>
+        </div>
+      </div>
+
+      <footer
+        style="
+          text-align: center;
+          color: var(--text-muted);
+          margin-top: 24px;
+          font-size: 0.85em;
+        "
+      >
+        Torn API v2 Dashboard — All API calls made directly from browser
+      </footer>
+    </div>
+
+    <script>
+      // ============================================================
+      // MODULE 1: CORE - Configuration, State, EventBus
+      // ============================================================
+
+      // ============================================================
+      // CONFIGURATION - Centralized API and app settings
+      // ============================================================
+      const Config = {
+        STORAGE_KEY: "torn_api_key",
+        API_BASE: "https://api.torn.com/v2",
+        CACHE_TTL: 5 * 60 * 1000, // 5 minutes
+        DEBOUNCE_MS: 300,
+
+        // API Endpoints - Centralized endpoint definitions
+        // Use template literals with placeholders for dynamic values
+        ENDPOINTS: {
+          // Faction endpoints
+          FACTION_BASIC: `/faction/basic`,
+          FACTION_RANKEDWARS: `/faction/rankedwars?offset=0&limit=20&sort=DESC`,
+          FACTION_RANKED_WARS_BY_ID: (warId) =>
+            `/faction/${warId}/rankedwars?offset=0&limit=20`,
+          FACTION_ARMORY_NEWS: ({ from, to }) =>
+            `/faction/news?striptags=true&limit=1000&sort=DESC&to=${to}&from=${from}&cat=armoryAction`,
+          FACTION_ATTACKS: ({ from, to, factionId }) =>
+            `/faction?selections=attacksfull&from=${from}&to=${to}&limit=1000&id=${factionId}`,
+          FACTION_ATTACKS_FULL: ({ from, to }) =>
+            `/faction/attacksfull?limit=1000&sort=DESC&to=${to}&from=${from}`,
+          FACTION_ARMORY_INVENTORY: (factionId) =>
+            `/faction?selections=drugs,boosters&id=${factionId}`,
+          FACTION_RANKEDWAR_REPORT: (warId) =>
+            `/faction/${warId}/rankedwarreport`,
+
+          // User endpoints
+          USER_PROFILE: (userId) => `/user/${userId}/basic?striptags=true`,
+
+          // Item IDs for reference
+          ITEM_IDS: {
+            XANAX: 206,
+            FHC: 444, // Full Health Cake
+          },
+        },
+
+        SELECTORS: {
+          apiKeyInput: "#apiKey",
+          saveKeyBtn: "#saveKeyBtn",
+          toggleKeyVisibility: "#toggleKeyVisibility",
+          loadWarsBtn: "#loadWarsBtn",
+          warsList: "#warsList",
+          warStats: "#warStats",
+          rawWarDataSection: "#rawWarDataSection",
+          rawWarDataContent: "#rawWarDataContent",
+          factionReportSection: "#factionReportSection",
+          factionReportContent: "#factionReportContent",
+          warPreview: "#warPreview",
+          warPreviewContent: "#warPreviewContent",
+        },
+      };
+
+      // Simple pub/sub for decoupled communication
+      const EventBus = {
+        _events: {},
+        on(event, callback) {
+          if (!this._events[event]) this._events[event] = [];
+          this._events[event].push(callback);
+          return () => this.off(event, callback);
+        },
+        off(event, callback) {
+          if (!this._events[event]) return;
+          this._events[event] = this._events[event].filter(
+            (cb) => cb !== callback,
+          );
+        },
+        emit(event, data) {
+          if (!this._events[event]) return;
+          this._events[event].forEach((cb) => {
+            try {
+              cb(data);
+            } catch (e) {
+              console.error(`[DEBUG] EventBus error on ${event}:`, e);
+            }
+          });
+        },
+      };
+
+      // Centralized state with change notifications
+      const State = {
+        _data: {
+          apiKey: localStorage.getItem(Config.STORAGE_KEY) || "",
+          wars: [],
+          currentWar: null,
+          warIntel: null,
+          loading: false,
+          error: null,
+        },
+        _listeners: new Set(),
+
+        get(key) {
+          return key ? this._data[key] : { ...this._data };
+        },
+
+        set(key, value) {
+          const oldValue = this._data[key];
+          this._data[key] = value;
+          this._notify(key, value, oldValue);
+          EventBus.emit(`state:${key}`, { key, value, oldValue });
+        },
+
+        subscribe(listener) {
+          this._listeners.add(listener);
+          return () => this._listeners.delete(listener);
+        },
+
+        _notify(key, value, oldValue) {
+          this._listeners.forEach((fn) => fn(key, value, oldValue));
+        },
+      };
+
+      // ============================================================
+      // MODULE 2: UTILS - Formatters and DOM Helpers
+      // ============================================================
+
+      const Formatters = {
+        number(num) {
+          if (num === null || num === undefined) return "-";
+          return num.toLocaleString();
+        },
+
+        date(timestamp) {
+          if (!timestamp) return "-";
+          return new Date(timestamp * 1000).toLocaleString();
+        },
+
+        duration(seconds) {
+          if (!seconds || seconds <= 0) return "0s";
+          const hrs = Math.floor(seconds / 3600);
+          const mins = Math.floor((seconds % 3600) / 60);
+          const secs = seconds % 60;
+          if (hrs > 0) return `${hrs}h ${mins}m`;
+          if (mins > 0) return `${mins}m ${secs}s`;
+          return `${secs}s`;
+        },
+
+        escapeHtml(text) {
+          if (!text) return "";
+          const div = document.createElement("div");
+          div.textContent = text;
+          return div.innerHTML;
+        },
+      };
+
+      const DOM = {
+        $(selector, context = document) {
+          return context.querySelector(selector);
+        },
+
+        $$(selector, context = document) {
+          return Array.from(context.querySelectorAll(selector));
+        },
+
+        create(tag, attrs = {}, children = []) {
+          const el = document.createElement(tag);
+          Object.entries(attrs).forEach(([key, val]) => {
+            if (key === "text") el.textContent = val;
+            else if (key === "html") el.innerHTML = val;
+            else if (key.startsWith("on") && typeof val === "function") {
+              el.addEventListener(key.slice(2).toLowerCase(), val);
+            } else {
+              el.setAttribute(key, val);
+            }
+          });
+          children.forEach((child) => el.appendChild(child));
+          return el;
+        },
+
+        show(el) {
+          el.style.display = "";
+        },
+        hide(el) {
+          el.style.display = "none";
+        },
+
+        clear(el) {
+          while (el.firstChild) el.removeChild(el.firstChild);
+        },
+      };
+
+      // ============================================================
+      // MODULE 3: API - Torn API Client with Caching
+      // ============================================================
+
+      const Cache = {
+        _store: new Map(),
+
+        get(key) {
+          const item = this._store.get(key);
+          if (!item) return null;
+          if (Date.now() > item.expires) {
+            this._store.delete(key);
+            return null;
+          }
+          return item.value;
+        },
+
+        set(key, value, ttl = Config.CACHE_TTL) {
+          this._store.set(key, { value, expires: Date.now() + ttl });
+        },
+
+        clear() {
+          this._store.clear();
+        },
+      };
+
+      const TornAPI = {
+        async request(endpoint, params = {}) {
+          const key = State.get("apiKey");
+          if (!key) throw new Error("API key not set");
+
+          const cacheKey = `${endpoint}:${JSON.stringify(params)}`;
+          const cached = Cache.get(cacheKey);
+          if (cached) return cached;
+
+          const url = new URL(`${Config.API_BASE}${endpoint}`);
+          url.searchParams.set("key", key);
+          Object.entries(params).forEach(([k, v]) => {
+            if (v !== undefined && v !== null) url.searchParams.set(k, v);
+          });
+
+          try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+            console.log(`[DEBUG] API Request: ${url.toString()}`);
+
+            if (data.error) {
+              const errorCode = data.error.code;
+              const errorMsg = data.error.error || "API Error";
+              console.error(
+                `❌ API Error [${endpoint}]: Code ${errorCode} - ${errorMsg}`,
+              );
+              throw new Error(`${errorMsg} (Code: ${errorCode})`);
+            }
+
+            Cache.set(cacheKey, data);
+            return data;
+          } catch (error) {
+            console.error(`[DEBUG] ❌ API Error (${endpoint}):`, error);
+            throw error;
+          }
+        },
+
+        async getUserProfile() {
+          const data = await this.request("/user");
+          return data;
+        },
+
+        async getUserFactionId() {
+          const data = await this.request(Config.ENDPOINTS.FACTION_BASIC);
+          const factionId = data?.basic?.id;
+          console.log(`[DEBUG] 👤 User faction ID: ${factionId}`);
+          return factionId;
+        },
+
+        async getFactionWars() {
+          const data = await this.request(Config.ENDPOINTS.FACTION_RANKEDWARS);
+          // API returns camelCase 'rankedwars'
+          const wars = data.rankedwars || [];
+          console.log(
+            `[DEBUG] Loaded ${wars.length} wars from /faction/rankedwars`,
+          );
+          return Array.isArray(wars) ? wars : [];
+        },
+
+        async getWarReport(factionId) {
+          const endpoint =
+            Config.ENDPOINTS.FACTION_RANKED_WARS_BY_ID(factionId);
+          const data = await this.request(endpoint);
+          // Log the full response for debugging
+          console.log("[DEBUG] War report response:", data);
+          // Try camelCase first, then snake_case
+          return data.rankedwarreport || data.ranked_war_report || data;
+        },
+
+        async getRankedWarReport(warId) {
+          const endpoint = Config.ENDPOINTS.FACTION_RANKEDWAR_REPORT(warId);
+          const data = await this.request(endpoint);
+          console.log("[DEBUG] Ranked war report response:", data);
+          return data.rankedwarreport || data.ranked_war_report || data;
+        },
+
+        async getFactionArmoryNews(factionId, start, end) {
+          try {
+            console.log(
+              `📡 Requesting armory news for faction ${factionId} from ${start} to ${end}`,
+            );
+            // Use centralized endpoint template
+            const endpoint = Config.ENDPOINTS.FACTION_ARMORY_NEWS({
+              from: start,
+              to: end,
+            });
+            const url = `${Config.API_BASE}${endpoint}&key=${State.get("apiKey")}`;
+
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const data = await response.json();
+
+            if (data.error) throw new Error(data.error.error || "API Error");
+
+            // v2 API returns { news: [...] }
+            let news = data.news || [];
+            if (!Array.isArray(news)) news = [];
+
+            console.log(
+              `✅ Loaded ${news.length} armory news entries for faction ${factionId}`,
+            );
+            console.log("[DEBUG] Armory news entries:", news);
+            if (news.length > 0) {
+              console.log("[DEBUG] First armory entry:", news[0]);
+              // Check for drug-related entries
+              const drugEntries = news.filter(
+                (n) =>
+                  n.text?.toLowerCase().includes("xanax") ||
+                  n.text?.toLowerCase().includes("full health cake") ||
+                  n.text?.toLowerCase().includes("fhc"),
+              );
+              console.log(
+                `[DEBUG] Found ${drugEntries.length} drug-related entries`,
+              );
+            }
+            return news;
+          } catch (error) {
+            console.error(
+              `❌ Failed to load armory news for faction ${factionId}:`,
+              error.message,
+            );
+            throw error; // Re-throw so caller knows about the error
+          }
+        },
+
+        async getFactionArmoryInventory(factionId) {
+          // Get current armory inventory (drugs and boosters)
+          // Xanax is in drugs, FHC is in boosters
+          try {
+            console.log(
+              `📡 Requesting armory inventory for faction ${factionId}`,
+            );
+            const endpoint =
+              Config.ENDPOINTS.FACTION_ARMORY_INVENTORY(factionId);
+            const data = await this.request(endpoint);
+
+            console.log(
+              `[DEBUG] ✅ Armory inventory for faction ${factionId}:`,
+              data,
+            );
+
+            // Extract Xanax (item ID 206) and FHC (item ID 444) counts
+            const drugs = data.drugs || {};
+            const boosters = data.boosters || {};
+
+            // Handle both array and object formats
+            const findItemQuantity = (container, itemId) => {
+              if (!container) return 0;
+              if (Array.isArray(container)) {
+                const item = container.find(
+                  (i) => i.id === itemId || i.item_id === itemId,
+                );
+                return item ? item.quantity || item.amount || 0 : 0;
+              }
+              if (typeof container === "object") {
+                // Object keyed by item ID
+                const item = container[itemId] || container[String(itemId)];
+                return item ? item.quantity || item.amount || 0 : 0;
+              }
+              return 0;
+            };
+
+            const inventory = {
+              xanax: findItemQuantity(drugs, Config.ENDPOINTS.ITEM_IDS.XANAX),
+              fhc: findItemQuantity(boosters, Config.ENDPOINTS.ITEM_IDS.FHC),
+              timestamp: Date.now(),
+            };
+
+            console.log(
+              `📦 Inventory snapshot: X:${inventory.xanax} F:${inventory.fhc}`,
+            );
+            return inventory;
+          } catch (error) {
+            console.error(
+              `❌ Failed to load armory inventory for faction ${factionId}:`,
+              error.message,
+            );
+            throw error;
+          }
+        },
+
+        async getFactionAttacks(factionId, start, end) {
+          try {
+            const endpoint = Config.ENDPOINTS.FACTION_ATTACKS({
+              from: start,
+              to: end,
+              factionId: factionId,
+            });
+            console.log(`[DEBUG] 📡 Fetching attacks: ${endpoint}`);
+            const data = await this.request(endpoint);
+            console.log(
+              `[DEBUG] 📥 Raw API response for faction ${factionId}:`,
+              data,
+            );
+
+            // Handle various response structures and filter errors
+            let attacks = data.attacks || data.attacksfull || data.data || data;
+            if (!Array.isArray(attacks) && typeof attacks === "object") {
+              attacks = Object.values(attacks);
+            }
+            if (!Array.isArray(attacks)) attacks = [];
+
+            // Filter out error objects - only remove if it has explicit error field
+            const validAttacks = attacks.filter((a) => !(a && a.error));
+            return validAttacks;
+          } catch (error) {
+            console.warn(
+              `[DEBUG] ❌ Failed to load attacks for faction ${factionId}:`,
+              error.message,
+            );
+            throw error; // Re-throw to let caller handle
+          }
+        },
+      };
+
+      // ============================================================
+      // MODULE 4: COMPONENTS - Reusable UI Building Blocks
+      // ============================================================
+
+      class Component {
+        constructor(element) {
+          this.element = typeof element === "string" ? DOM.$(element) : element;
+          this._destroyed = false;
+        }
+
+        render() {
+          throw new Error("Component must implement render()");
+        }
+
+        update(data) {
+          if (this._destroyed) return;
+          DOM.clear(this.element);
+          this.element.appendChild(this.render(data));
+        }
+
+        destroy() {
+          this._destroyed = true;
+          DOM.clear(this.element);
+        }
+      }
+
+      class Card extends Component {
+        render({ title, value, subtitle, color = "accent" }) {
+          return DOM.create(
+            "div",
+            {
+              class: "metric-card",
+              style: `border-color: var(--${color})`,
+            },
+            [
+              DOM.create("div", {
+                text: title,
+                class: "metric-title",
+              }),
+              DOM.create("div", {
+                text: value,
+                class: "metric-value",
+                style: `color: var(--${color})`,
+              }),
+              subtitle
+                ? DOM.create("div", {
+                    text: subtitle,
+                    class: "metric-subtitle",
+                  })
+                : null,
+            ].filter(Boolean),
+          );
+        }
+      }
+
+      class Tabs extends Component {
+        constructor(element, tabs = []) {
+          super(element);
+          this.tabs = tabs;
+          this.activeTab = tabs[0]?.id || null;
+        }
+
+        render() {
+          const container = DOM.create("div", { class: "tabs" });
+
+          const buttons = this.tabs.map((tab) => {
+            const btn = DOM.create("button", {
+              class: `tab ${tab.id === this.activeTab ? "active" : ""}`,
+              text: tab.label,
+              onclick: () => this.switchTab(tab.id),
+            });
+            return btn;
+          });
+
+          buttons.forEach((btn) => container.appendChild(btn));
+          return container;
+        }
+
+        switchTab(id) {
+          this.activeTab = id;
+          this.update();
+          EventBus.emit("tab:switch", { tab: id });
+        }
+      }
+
+      class DataTable extends Component {
+        constructor(element, options = {}) {
+          super(element);
+          this.columns = options.columns || [];
+          this.data = [];
+          this.sort = { column: null, direction: "asc" };
+        }
+
+        render(data = this.data) {
+          this.data = data;
+
+          const table = DOM.create("table", { class: "data-table" });
+          const thead = DOM.create("thead");
+          const tbody = DOM.create("tbody");
+
+          // Header
+          const headerRow = DOM.create("tr");
+          this.columns.forEach((col) => {
+            const th = DOM.create("th", {
+              text: col.label,
+              onclick: () => col.sortable && this.sortBy(col.key),
+            });
+            if (col.sortable) {
+              th.style.cursor = "pointer";
+              if (this.sort.column === col.key) {
+                th.textContent += this.sort.direction === "asc" ? " ↑" : " ↓";
+              }
+            }
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+
+          // Body
+          const sorted = this.getSortedData();
+          sorted.forEach((row) => {
+            const tr = DOM.create("tr");
+            this.columns.forEach((col) => {
+              const value = col.format
+                ? col.format(row[col.key], row)
+                : row[col.key];
+              const td = DOM.create("td", { html: value });
+              tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+          });
+
+          table.appendChild(thead);
+          table.appendChild(tbody);
+          return table;
+        }
+
+        sortBy(column) {
+          if (this.sort.column === column) {
+            this.sort.direction =
+              this.sort.direction === "asc" ? "desc" : "asc";
+          } else {
+            this.sort.column = column;
+            this.sort.direction = "asc";
+          }
+          this.update(this.data);
+        }
+
+        getSortedData() {
+          if (!this.sort.column) return this.data;
+
+          const col = this.columns.find((c) => c.key === this.sort.column);
+          if (!col) return this.data;
+
+          return [...this.data].sort((a, b) => {
+            let av = a[this.sort.column];
+            let bv = b[this.sort.column];
+
+            if (typeof av === "string") av = av.toLowerCase();
+            if (typeof bv === "string") bv = bv.toLowerCase();
+
+            if (av < bv) return this.sort.direction === "asc" ? -1 : 1;
+            if (av > bv) return this.sort.direction === "asc" ? 1 : -1;
+            return 0;
+          });
+        }
+      }
+
+      // ============================================================
+      // MODULE 5: FEATURES - War Intel & Player Activity
+      // ============================================================
+
+      const WarIntel = {
+        process(report, attacksData, armoryInventory = null) {
+          console.log("[DEBUG] 📊 WarIntel.process - report:", report);
+          const factions = report.factions || [];
+          const allAttacks = attacksData.flatMap((a) => a.attacks || []);
+
+          // The report IS the war object (id, start, end, winner, factions)
+          const war = {
+            id: report.id,
+            start: report.start,
+            end: report.end,
+            winner: report.winner,
+            forfeit: report.forfeit,
+            target: report.target,
+          };
+          console.log("[DEBUG] 📊 War object created:", war);
+
+          // Include armory inventory if available (for delta tracking)
+          const armory = armoryInventory || null;
+
+          // Extract stats from war report factions
+          // API returns: attacks, score, rewards.respect per faction
+          const processedFactions = factions.map((f, i) => {
+            const attacks = attacksData[i]?.attacks || [];
+
+            // Use war report data directly: f.attacks and f.rewards.respect
+            const stats = {
+              wins: f.attacks || 0, // Total attacks (API doesn't break down wins/losses here)
+              losses: 0, // Not provided in this endpoint
+              stalemates: 0, // Not provided
+              respect: f.rewards?.respect || 0,
+            };
+
+            return {
+              ...f,
+              attacks,
+              stats,
+            };
+          });
+
+          // Calculate total attacks and respect from faction data
+          // Use stats.wins which stores f.attacks (API count), since f.attacks was overwritten with array
+          const totalAttacks = processedFactions.reduce(
+            (sum, f) => sum + (f.stats?.wins || 0),
+            0,
+          );
+          const totalRespect = processedFactions.reduce(
+            (sum, f) => sum + (f.rewards?.respect || 0),
+            0,
+          );
+
+          return {
+            war,
+            factions: processedFactions,
+            allAttacks,
+            armory, // Include armory inventory snapshot
+            summary: {
+              totalAttacks,
+              totalRespect,
+              totalMembers: processedFactions.reduce((sum, f) => {
+                const members = f.members || [];
+                return (
+                  sum +
+                  (Array.isArray(members)
+                    ? members.length
+                    : Object.keys(members).length)
+                );
+              }, 0),
+              start: war.start,
+              end: war.end,
+              winner: war.winner,
+            },
+          };
+        },
+
+        calculateFactionStats(attacks) {
+          return {
+            wins: attacks.filter((a) => a.result === "win").length,
+            losses: attacks.filter((a) => a.result === "loss").length,
+            stalemates: attacks.filter((a) => a.result === "stalemate").length,
+            respect: attacks.reduce((sum, a) => sum + (a.respect_gain || 0), 0),
+          };
+        },
+
+        calculateSummary(war, attacks, factions) {
+          const totalMembers = factions.reduce((sum, f) => {
+            const members = f.members || [];
+            return (
+              sum +
+              (Array.isArray(members)
+                ? members.length
+                : Object.keys(members).length)
+            );
+          }, 0);
+
+          return {
+            totalAttacks: attacks.length,
+            totalRespect: attacks.reduce(
+              (sum, a) => sum + (a.respect_gain || 0),
+              0,
+            ),
+            totalMembers,
+            avgAttacksPerMember:
+              totalMembers > 0 ? Math.round(attacks.length / totalMembers) : 0,
+            start: war?.start,
+            end: war?.end,
+            winner: war?.winner,
+          };
+        },
+
+        renderOverview(intel) {
+          const { war, factions, summary, allAttacks } = intel;
+          const winnerFaction = factions.find((f) => f.id === summary.winner);
+          const loserFaction = factions.find((f) => f.id !== summary.winner);
+
+          const container = DOM.create("div", { class: "war-overview" });
+
+          // War Result Header
+          const header = DOM.create("div", { class: "war-result-card" });
+          if (winnerFaction) {
+            header.innerHTML = `
+              <div class="winner-badge">🏆 Winner</div>
+              <div class="winner-name">${Formatters.escapeHtml(winnerFaction.name)}</div>
+              <div style="margin-top: 12px; color: var(--text-muted); font-size: 0.9em;">
+                Defeated ${Formatters.escapeHtml(loserFaction?.name || "Opponent")}
+              </div>
+            `;
+          } else {
+            header.innerHTML = `
+              <div class="winner-badge">⚔️ War ended</div>
+              <div class="winner-name">No winner determined</div>
+            `;
+          }
+          container.appendChild(header);
+
+          // War Timeline Details
+          const timelineSection = DOM.create(
+            "div",
+            { class: "section-title" },
+            [DOM.create("span", { text: "⏱️ War Timeline" })],
+          );
+          container.appendChild(timelineSection);
+
+          const details = DOM.create("div", { class: "war-details" });
+          details.innerHTML = `
+            <div class="war-details-row">
+              <span class="war-details-label">Started</span>
+              <span class="war-details-value">${Formatters.date(summary.start)}</span>
+            </div>
+            <div class="war-details-row">
+              <span class="war-details-label">Ended</span>
+              <span class="war-details-value">${Formatters.date(summary.end)}</span>
+            </div>
+            <div class="war-details-row">
+              <span class="war-details-label">Duration</span>
+              <span class="war-details-value">${Formatters.duration(summary.end - summary.start)}</span>
+            </div>
+            <div class="war-details-row">
+              <span class="war-details-label">War ID</span>
+              <span class="war-details-value">#${war?.id || "N/A"}</span>
+            </div>
+          `;
+          container.appendChild(details);
+
+          return container;
+        },
+      };
+
+      // ============================================================
+      // MODULE 6: APP - Main Controller
+      // ============================================================
+
+      // Global variable for user faction ID
+      let userFactionId = null;
+
+      const App = {
+        components: {},
+
+        async init() {
+          this.bindElements();
+          this.bindEvents();
+          this.restoreApiKey();
+
+          // Subscribe to state changes
+          State.subscribe((key, value) => {
+            if (key === "apiKey") this.onApiKeyChange(value);
+            if (key === "wars") this.renderWarsList(value);
+            if (key === "warIntel") this.renderWarIntel(value);
+          });
+
+          console.log("[DEBUG] App initialized");
+        },
+
+        async fetchUserFactionId() {
+          const apiKey = State.get("apiKey");
+          if (!apiKey) {
+            console.log("[DEBUG] No API key yet, skipping user faction fetch");
+            return;
+          }
+
+          try {
+            const data = await TornAPI.getUserFactionId();
+            userFactionId = data;
+            console.log(
+              `[DEBUG] 🎯 Global userFactionId set: ${userFactionId}`,
+            );
+          } catch (error) {
+            console.error(
+              "[DEBUG] Failed to fetch user faction ID:",
+              error.message,
+            );
+          }
+        },
+
+        bindElements() {
+          this.els = {
+            apiKey: DOM.$(Config.SELECTORS.apiKeyInput),
+            saveKeyBtn: DOM.$(Config.SELECTORS.saveKeyBtn),
+            toggleKeyVisibility: DOM.$(Config.SELECTORS.toggleKeyVisibility),
+            loadWarsBtn: DOM.$(Config.SELECTORS.loadWarsBtn),
+            warsList: DOM.$(Config.SELECTORS.warsList),
+            warStats: DOM.$(Config.SELECTORS.warStats),
+            rawWarDataSection: DOM.$(Config.SELECTORS.rawWarDataSection),
+            rawWarDataContent: DOM.$(Config.SELECTORS.rawWarDataContent),
+            factionReportSection: DOM.$(Config.SELECTORS.factionReportSection),
+            factionReportContent: DOM.$(Config.SELECTORS.factionReportContent),
+            warPreview: DOM.$(Config.SELECTORS.warPreview),
+            warPreviewContent: DOM.$(Config.SELECTORS.warPreviewContent),
+          };
+        },
+
+        bindEvents() {
+          this.els.saveKeyBtn?.addEventListener("click", () =>
+            this.saveApiKey(),
+          );
+          this.els.apiKey?.addEventListener(
+            "input",
+            this.debounce(() => {
+              if (this.els.apiKey.value.length >= 16) this.saveApiKey();
+            }, Config.DEBOUNCE_MS),
+          );
+
+          this.els.warsList?.addEventListener("change", (e) => {
+            if (e.target.value) {
+              this.showWarPreview(e.target.value);
+            } else {
+              if (this.els.warPreview)
+                this.els.warPreview.classList.add("hidden");
+            }
+          });
+
+          this.els.loadWarsBtn?.addEventListener("click", () => {
+            this.loadWars();
+          });
+
+          this.els.toggleKeyVisibility?.addEventListener("click", () => {
+            this.toggleApiKeyVisibility();
+          });
+
+          // Bind tab clicks
+          DOM.$$("[data-tab]").forEach((tab) => {
+            tab.addEventListener("click", () => {
+              const tabId = tab.getAttribute("data-tab");
+              this.showTab(tabId);
+            });
+          });
+        },
+
+        toggleApiKeyVisibility() {
+          const input = this.els.apiKey;
+          const button = this.els.toggleKeyVisibility;
+          if (!input || !button) return;
+
+          if (input.type === "password") {
+            input.type = "text";
+            button.textContent = "🙈";
+            button.title = "Hide API Key";
+          } else {
+            input.type = "password";
+            button.textContent = "👁️";
+            button.title = "Show API Key";
+          }
+        },
+
+        debounce(fn, ms) {
+          let timeout;
+          return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(this, args), ms);
+          };
+        },
+
+        async restoreApiKey() {
+          const key = State.get("apiKey");
+          if (key && this.els.apiKey) {
+            this.els.apiKey.value = key;
+            // Fetch user faction ID then load wars
+            await this.fetchUserFactionId();
+            this.loadWars();
+          }
+        },
+
+        async saveApiKey() {
+          const key = this.els.apiKey?.value?.trim();
+          if (!key) return;
+
+          State.set("apiKey", key);
+          localStorage.setItem(Config.STORAGE_KEY, key);
+          this.showStatus("API key saved", "success");
+
+          // Fetch user faction ID now that we have an API key
+          await this.fetchUserFactionId();
+          this.loadWars();
+        },
+
+        onApiKeyChange(key) {
+          if (key) Cache.clear();
+        },
+
+        async loadWars() {
+          State.set("loading", true);
+          this.showStatus("Loading wars...", "info");
+
+          try {
+            const wars = await TornAPI.getFactionWars();
+            State.set("wars", wars);
+            console.log(`[DEBUG] ✅ Loaded ${wars.length} wars`);
+
+            // Log wars as single array of objects
+            const warsList = wars.map((war) => ({
+              id: war.id,
+              factions:
+                war.factions ||
+                [war.faction1, war.faction2].filter(Boolean) ||
+                [war.f1, war.f2].filter(Boolean),
+              start: war.start,
+              end: war.end,
+              winner: war.winner,
+            }));
+            console.log("[DEBUG] \n📋 WARS LIST:", warsList);
+
+            this.showStatus(`Loaded ${wars.length} wars`, "success");
+          } catch (error) {
+            console.error("[DEBUG] ❌ Failed to load wars:", error);
+            this.showStatus(`Wars API Error: ${error.message}`, "error");
+          } finally {
+            State.set("loading", false);
+          }
+        },
+
+        renderWarsList(wars) {
+          if (!this.els.warsList) return;
+
+          DOM.clear(this.els.warsList);
+          this.els.warsList.classList.remove("hidden");
+
+          if (!wars || wars.length === 0) {
+            const noWarsOption = DOM.create("option", {
+              value: "",
+              text: "No wars found - API may have limited access",
+            });
+            this.els.warsList.appendChild(noWarsOption);
+            return;
+          }
+
+          const defaultOption = DOM.create("option", {
+            value: "",
+            text: "-- Select a war --",
+          });
+          this.els.warsList.appendChild(defaultOption);
+
+          wars.forEach((war) => {
+            // Extract faction names from various possible API structures
+            let faction1Name = "Faction 1";
+            let faction2Name = "Faction 2";
+
+            // Try faction1/faction2 objects
+            if (war.faction1?.name) faction1Name = war.faction1.name;
+            else if (war.f1?.name) faction1Name = war.f1.name;
+            else if (war.faction_1?.name) faction1Name = war.faction_1.name;
+
+            if (war.faction2?.name) faction2Name = war.faction2.name;
+            else if (war.f2?.name) faction2Name = war.f2.name;
+            else if (war.faction_2?.name) faction2Name = war.faction_2.name;
+
+            // Try factions array
+            if (war.factions && war.factions.length >= 2) {
+              if (!war.faction1?.name)
+                faction1Name =
+                  war.factions[0].name ||
+                  war.factions[0].faction_name ||
+                  `Faction ${war.factions[0].id}`;
+              if (!war.faction2?.name)
+                faction2Name =
+                  war.factions[1].name ||
+                  war.factions[1].faction_name ||
+                  `Faction ${war.factions[1].id}`;
+            }
+
+            const warName = `${faction1Name} vs ${faction2Name}`;
+            const option = DOM.create("option", {
+              value: war.id,
+              text: `${warName} - ${Formatters.date(war.start)}`,
+            });
+            this.els.warsList.appendChild(option);
+          });
+        },
+
+        showWarPreview(warId) {
+          const wars = State.get("wars") || [];
+          const war = wars.find((w) => String(w.id) === String(warId));
+
+          if (!war || !this.els.warPreview || !this.els.warPreviewContent) {
+            return;
+          }
+
+          // Store selected war for later use
+          State.set("selectedWar", war);
+
+          // Extract faction info
+          let faction1 = { name: "Faction 1", id: "?" };
+          let faction2 = { name: "Faction 2", id: "?" };
+
+          if (war.factions && war.factions.length >= 2) {
+            faction1 = war.factions[0];
+            faction2 = war.factions[1];
+          } else if (war.faction1 && war.faction2) {
+            faction1 = war.faction1;
+            faction2 = war.faction2;
+          } else if (war.f1 && war.f2) {
+            faction1 = war.f1;
+            faction2 = war.f2;
+          }
+
+          // Determine winner
+          let winnerText = "No winner";
+          let winnerFaction = null;
+          if (war.winner) {
+            if (String(war.winner) === String(faction1.id)) {
+              winnerText = `${faction1.name} 🏆`;
+              winnerFaction = faction1;
+            } else if (String(war.winner) === String(faction2.id)) {
+              winnerText = `${faction2.name} 🏆`;
+              winnerFaction = faction2;
+            } else {
+              winnerText = `Faction ${war.winner} 🏆`;
+            }
+          }
+
+          // Build preview HTML
+          const previewHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+              <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                <div style="color: var(--text-muted); font-size: 0.8em; margin-bottom: 4px;">War ID</div>
+                <div style="color: var(--text); font-weight: 600;">#${war.id}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                <div style="color: var(--text-muted); font-size: 0.8em; margin-bottom: 4px;">Started</div>
+                <div style="color: var(--text); font-weight: 600;">${Formatters.date(war.start)}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                <div style="color: var(--text-muted); font-size: 0.8em; margin-bottom: 4px;">Ended</div>
+                <div style="color: var(--text); font-weight: 600;">${Formatters.date(war.end)}</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px;">
+                <div style="color: var(--text-muted); font-size: 0.8em; margin-bottom: 4px;">Duration</div>
+                <div style="color: var(--accent); font-weight: 600;">${Formatters.duration(war.end - war.start)}</div>
+              </div>
+            </div>
+            <div style="margin-top: 16px; padding: 16px; background: ${winnerFaction ? "rgba(0, 198, 174, 0.15)" : "rgba(0,0,0,0.2)"}; border: 1px solid ${winnerFaction ? "var(--success)" : "var(--border)"}; border-radius: 8px; text-align: center;">
+              <div style="color: var(--text-muted); font-size: 0.85em; margin-bottom: 8px;">
+                ${winnerFaction ? "🏆 Winner" : "⚔️ Result"}
+              </div>
+              <div style="color: ${winnerFaction ? "var(--success)" : "var(--text)"}; font-size: 1.2em; font-weight: 700;">
+                ${winnerText}
+              </div>
+            </div>
+            <div style="margin-top: 12px; display: flex; justify-content: space-between; gap: 12px;">
+              <div id="warPreviewFaction1" data-div-name="warPreview-Faction1" data-faction-id="${faction1.id}" style="flex: 1; padding: 12px; background: rgba(58, 141, 222, 0.1); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(58, 141, 222, 0.2)'" onmouseout="this.style.background='rgba(58, 141, 222, 0.1)'">
+                <div style="color: var(--text-muted); font-size: 0.8em;">Faction 1</div>
+                <div style="color: var(--accent); font-weight: 600;">${Formatters.escapeHtml(faction1.name || `Faction ${faction1.id}`)}</div>
+                <div style="color: var(--text-muted); font-size: 0.7em; margin-top: 4px;">👆 Click for report</div>
+              </div>
+              <div id="warPreviewFaction2" data-div-name="warPreview-Faction2" data-faction-id="${faction2.id}" style="flex: 1; padding: 12px; background: rgba(58, 141, 222, 0.1); border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(58, 141, 222, 0.2)'" onmouseout="this.style.background='rgba(58, 141, 222, 0.1)'">
+                <div style="color: var(--text-muted); font-size: 0.8em;">Faction 2</div>
+                <div style="color: var(--accent); font-weight: 600;">${Formatters.escapeHtml(faction2.name || `Faction ${faction2.id}`)}</div>
+                <div style="color: var(--text-muted); font-size: 0.7em; margin-top: 4px;">👆 Click for report</div>
+              </div>
+            </div>
+          `;
+
+          this.els.warPreviewContent.innerHTML = previewHTML;
+          this.els.warPreview.classList.remove("hidden");
+
+          // Bind click handlers for faction cards
+          const f1Div = DOM.$("#warPreviewFaction1");
+          const f2Div = DOM.$("#warPreviewFaction2");
+          if (f1Div) {
+            f1Div.addEventListener("click", () => {
+              this.loadFactionReport(
+                war.id,
+                faction1.id,
+                faction1.name || `Faction ${faction1.id}`,
+                war.start,
+                war.end,
+              );
+            });
+          }
+          if (f2Div) {
+            f2Div.addEventListener("click", () => {
+              this.loadFactionReport(
+                war.id,
+                faction2.id,
+                faction2.name || `Faction ${faction2.id}`,
+                war.start,
+                war.end,
+              );
+            });
+          }
+        },
+
+        renderWarIntel(intel) {
+          console.log("[DEBUG] renderWarIntel called with:", intel);
+
+          if (!intel) {
+            console.error("[DEBUG] No intel data to render");
+            return;
+          }
+
+          const { war, factions, summary } = intel;
+
+          // Get original war data with faction names
+          const selectedWar = State.get("selectedWar");
+          const warFactions =
+            selectedWar?.factions ||
+            [selectedWar?.faction1, selectedWar?.faction2].filter(Boolean) ||
+            [];
+
+          console.log("[DEBUG] 🎯 War data:", {
+            war,
+            warFactions,
+            summary,
+            factions: factions.map((f) => ({ id: f.id, name: f.name })),
+          });
+          // Look up factions from report, fallback to stored war data for names
+          let winnerFaction = factions.find((f) => f.id === summary.winner);
+          let loserFaction = factions.find((f) => f.id !== summary.winner);
+
+          // If names missing, get from stored war data
+          if (!winnerFaction?.name && summary.winner) {
+            winnerFaction = warFactions.find(
+              (f) => f.id === summary.winner,
+            ) || { id: summary.winner, name: `Faction ${summary.winner}` };
+          }
+          if (!loserFaction?.name && summary.winner) {
+            loserFaction = warFactions.find((f) => f.id !== summary.winner) || {
+              id: "unknown",
+              name: "Opponent",
+            };
+          }
+
+          console.log("[DEBUG] 🏆 Winner faction:", winnerFaction);
+          console.log("[DEBUG] 🥈 Loser faction:", loserFaction);
+
+          // Show all sections
+          if (this.els.rawWarDataSection)
+            this.els.rawWarDataSection.classList.remove("hidden");
+          if (this.els.factionReportSection)
+            this.els.factionReportSection.classList.remove("hidden");
+
+          // Clear all content containers
+          if (this.els.rawWarDataContent) DOM.clear(this.els.rawWarDataContent);
+          if (this.els.factionReportContent)
+            DOM.clear(this.els.factionReportContent);
+
+          // 2. Render Raw War Data
+          if (this.els.rawWarDataContent) {
+            const rawDataCard = DOM.create("div", {
+              class: "war-details",
+              style: "max-height: 400px; overflow-y: auto;",
+            });
+
+            const warData = intel.war || {};
+            const factionsData = intel.factions || [];
+            const summaryData = intel.summary || {};
+
+            rawDataCard.innerHTML = `
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin: 0 0 8px 0;">War Info</h4>
+                <pre style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; color: var(--text);">${JSON.stringify(warData, null, 2)}</pre>
+              </div>
+              <div style="margin-bottom: 16px;">
+                <h4 style="color: var(--accent); margin: 0 0 8px 0;">Factions (${factionsData.length})</h4>
+                <pre style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; color: var(--text);">${JSON.stringify(factionsData, null, 2)}</pre>
+              </div>
+              <div>
+                <h4 style="color: var(--accent); margin: 0 0 8px 0;">Summary</h4>
+                <pre style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85em; color: var(--text);">${JSON.stringify(summaryData, null, 2)}</pre>
+              </div>
+            `;
+            this.els.rawWarDataContent.appendChild(rawDataCard);
+          }
+
+          // 4. Render Faction Report
+          if (this.els.factionReportContent) {
+            const factionsContainer = DOM.create("div", {
+              class: "factions-report",
+            });
+
+            factions.forEach((f) => {
+              const isWinner = f.id === summary.winner;
+
+              const card = DOM.create("div", {
+                class: `faction-card ${isWinner ? "winner" : ""}`,
+                title: "Click to view faction details",
+              });
+
+              card.innerHTML = `
+                <h4>${Formatters.escapeHtml(f.name)} ${isWinner ? "🏆" : ""}</h4>
+                <div class="faction-stats">
+                  <span class="stat win">${f.stats.wins} attacks</span>
+                  <span class="stat respect">+${Formatters.number(Math.round(f.stats.respect))} respect</span>
+                  <span class="stat" style="background: rgba(156, 163, 175, 0.2); color: #9ca3af;">Score: ${Formatters.number(f.score || 0)}</span>
+                </div>
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: var(--text-muted); font-size: 0.85em;">Rank Change</span>
+                    <span style="color: var(--accent); font-weight: 600;">${f.rank?.before || "?"} → ${f.rank?.after || "?"}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted); font-size: 0.85em;">Members</span>
+                    <span style="color: var(--text);">${(f.members || []).length}</span>
+                  </div>
+                </div>
+                <div style="margin-top: 12px; text-align: center; color: var(--text-muted); font-size: 0.75em; pointer-events: none;">
+                  <span>👆 Click for details</span>
+                </div>
+              `;
+
+              // Click to show detailed faction view
+              card.addEventListener("click", () => {
+                this.showFactionDetails(f, summary.winner, war.start, war.end);
+              });
+
+              factionsContainer.appendChild(card);
+            });
+
+            this.els.factionReportContent.appendChild(factionsContainer);
+          }
+
+          // Remove any existing faction details cards
+          const existingDetails = DOM.$("#factionDetailsCard");
+          if (existingDetails) existingDetails.remove();
+
+          console.log("[DEBUG] War intel rendered to all cards successfully");
+        },
+
+        // Parse armory news to extract drug usage per member
+        parseArmoryDrugs(newsEntries, report) {
+          const drugs = {};
+          const members =
+            report?.factions?.flatMap((f) => f.members || []) || [];
+
+          // Build member name lookup
+          const memberNameMap = {};
+          members.forEach((m) => {
+            if (m.name) {
+              memberNameMap[m.name.toLowerCase()] = String(m.id);
+            }
+          });
+
+          newsEntries.forEach((entry) => {
+            const newsText = (entry.text || "").toLowerCase();
+            if (!newsText) return;
+
+            const hasXanax = newsText.includes("xanax");
+            const hasFHC =
+              newsText.includes("full health cake") || newsText.includes("fhc");
+            if (!hasXanax && !hasFHC) return;
+
+            const isUsage = newsText.includes("used one of the faction's");
+            const isLoan =
+              newsText.includes("loaned") &&
+              newsText.includes("from the faction armory");
+            if (!isUsage && !isLoan) return;
+
+            // Extract player name
+            let playerName = null;
+            const usedMatch = entry.text.match(
+              /^([^\s]+)\s+used one of the faction's/i,
+            );
+            const loanedMatch = entry.text.match(/^([^\s]+)\s+loaned/i);
+
+            if (usedMatch) playerName = usedMatch[1].trim();
+            else if (loanedMatch) playerName = loanedMatch[1].trim();
+
+            if (!playerName) return;
+
+            // Match to member
+            let memberId = memberNameMap[playerName.toLowerCase()];
+            if (!memberId) {
+              const lowerPlayerName = playerName.toLowerCase();
+              for (const [name, id] of Object.entries(memberNameMap)) {
+                if (
+                  lowerPlayerName.includes(name) ||
+                  name.includes(lowerPlayerName)
+                ) {
+                  memberId = id;
+                  break;
+                }
+              }
+            }
+            if (!memberId) memberId = playerName.toLowerCase();
+
+            if (!drugs[memberId]) {
+              drugs[memberId] = { xanax: 0, fhc: 0 };
+            }
+
+            // Extract quantity
+            let qty = 1;
+            const qtyMatch = newsText.match(/loaned\s+(\d+)x?\s+/);
+            if (qtyMatch) qty = parseInt(qtyMatch[1]);
+
+            if (hasXanax) drugs[memberId].xanax += qty;
+            if (hasFHC) drugs[memberId].fhc += qty;
+          });
+
+          return drugs;
+        },
+
+        async showFactionDetails(faction, winnerId, warStart, warEnd) {
+          // Remove any existing details card
+          const existingDetails = DOM.$("#factionDetailsCard");
+          if (existingDetails) existingDetails.remove();
+
+          // Create new details card
+          const detailsCard = DOM.create("div", {
+            id: "factionDetailsCard",
+            class: "card",
+            style: "margin-top: 24px; border: 2px solid var(--accent);",
+          });
+
+          const isWinner = faction.id === winnerId;
+          const rewards = faction.rewards || {};
+          const members = faction.members || [];
+          const items = rewards.items || [];
+
+          // Drug tracking data (will be populated from armory news)
+          let drugData = {};
+          let armoryLoading = true;
+          let armoryError = null;
+          let hasArmoryAccess = false;
+
+          // Sort state
+          let sortColumn = "score";
+          let sortDirection = "desc";
+
+          // Parse armory news to count drug withdrawals (v2 API format)
+          const parseArmoryNews = (newsEntries) => {
+            const drugs = {};
+
+            console.log(
+              "[DEBUG] Parsing",
+              newsEntries.length,
+              "armory entries",
+            );
+
+            // Build member name lookup for matching
+            const memberNameMap = {};
+            members.forEach((m) => {
+              if (m.name) {
+                memberNameMap[m.name.toLowerCase()] = m.id;
+              }
+            });
+
+            newsEntries.forEach((entry, idx) => {
+              // v2 API uses 'text' field, not 'news'
+              const newsText = (entry.text || "").toLowerCase();
+              const timestamp = entry.timestamp;
+
+              if (!newsText) {
+                console.log(`[DEBUG] Entry ${idx}: No text`, entry);
+                return;
+              }
+
+              // Check for drug-related entries
+              const hasXanax = newsText.includes("xanax");
+              const hasFHC =
+                newsText.includes("full health cake") ||
+                newsText.includes("fhc");
+
+              if (!hasXanax && !hasFHC) return;
+
+              // v2 format: "PlayerName used one of the faction's Xanax items"
+              // or: "PlayerName used one of the faction's Full Health Cake items"
+              // or: "PlayerName loaned 1x Xanax to OtherPlayer from the faction armory"
+
+              const isUsage = newsText.includes("used one of the faction's");
+              const isLoan =
+                newsText.includes("loaned") &&
+                newsText.includes("from the faction armory");
+
+              if (!isUsage && !isLoan) {
+                if (idx < 5)
+                  console.log(
+                    `[DEBUG] Entry ${idx}: Not a usage/loan`,
+                    newsText,
+                  );
+                return;
+              }
+
+              // Extract player name from v2 format
+              // Format: "PlayerName used one of the faction's..."
+              // Format: "PlayerName loaned 1x..."
+              let playerName = null;
+
+              const usedMatch = entry.text.match(
+                /^([^\s]+)\s+used one of the faction's/i,
+              );
+              const loanedMatch = entry.text.match(/^([^\s]+)\s+loaned/i);
+
+              if (usedMatch) {
+                playerName = usedMatch[1].trim();
+              } else if (loanedMatch) {
+                playerName = loanedMatch[1].trim();
+              }
+
+              if (!playerName) {
+                if (idx < 5)
+                  console.log(
+                    `Entry ${idx}: Could not extract player name from:`,
+                    entry.text,
+                  );
+                return;
+              }
+
+              // Match to member by name
+              let memberId = memberNameMap[playerName.toLowerCase()];
+
+              // Try case-insensitive partial match
+              if (!memberId) {
+                const lowerPlayerName = playerName.toLowerCase();
+                for (const [name, id] of Object.entries(memberNameMap)) {
+                  if (
+                    lowerPlayerName.includes(name) ||
+                    name.includes(lowerPlayerName)
+                  ) {
+                    memberId = id;
+                    break;
+                  }
+                }
+              }
+
+              if (!memberId) {
+                if (idx < 5)
+                  console.log(
+                    `Entry ${idx}: Player "${playerName}" not found in members`,
+                  );
+                // Still track by name if member not found
+                memberId = playerName.toLowerCase();
+              }
+
+              if (!drugs[memberId]) {
+                drugs[memberId] = { xanax: 0, fhc: 0 };
+              }
+
+              // Count the drug (v2 format always shows 1 item per entry for "used")
+              // For loans, extract quantity: "loaned 1x Xanax" or "loaned 5x Xanax"
+              let qty = 1;
+              const qtyMatch = newsText.match(/loaned\s+(\d+)x?\s+/);
+              if (qtyMatch) {
+                qty = parseInt(qtyMatch[1]);
+              }
+
+              if (hasXanax) {
+                drugs[memberId].xanax += qty;
+              }
+
+              if (hasFHC) {
+                drugs[memberId].fhc += qty;
+              }
+            });
+
+            // Log summary of all drugs found
+            const totalXanax = Object.values(drugs).reduce(
+              (sum, d) => sum + d.xanax,
+              0,
+            );
+            const totalFHC = Object.values(drugs).reduce(
+              (sum, d) => sum + d.fhc,
+              0,
+            );
+
+            return drugs;
+          };
+
+          // Load armory news
+          const loadArmoryData = async () => {
+            console.log(
+              `📡 Loading armory news for faction ${faction.id} (${faction.name}) from ${warStart} to ${warEnd}`,
+            );
+            try {
+              const newsEntries = await TornAPI.getFactionArmoryNews(
+                faction.id,
+                warStart,
+                warEnd,
+              );
+              drugData = parseArmoryNews(newsEntries);
+              armoryLoading = false;
+              hasArmoryAccess = true;
+
+              // Debug: log drug data summary
+              const userCount = Object.keys(drugData).length;
+
+              // Show visible message if no drugs found
+              if (userCount === 0 && newsEntries.length > 0) {
+                console.warn(
+                  "[DEBUG] ⚠️ Armory entries found but no drugs matched. Check parsing logic.",
+                );
+              }
+
+              renderTable();
+            } catch (error) {
+              console.error(
+                "[DEBUG] ❌ Failed to load armory data:",
+                error.message,
+              );
+              armoryLoading = false;
+              armoryError = error.message;
+              hasArmoryAccess = false;
+              drugData = {}; // Reset to empty
+              renderTable(); // Still render table with N/A
+            }
+          };
+
+          const sortMembers = () => {
+            const sorted = [...members].sort((a, b) => {
+              let av = a[sortColumn] || 0;
+              let bv = b[sortColumn] || 0;
+
+              if (sortColumn === "name") {
+                av = (a.name || "").toLowerCase();
+                bv = (b.name || "").toLowerCase();
+              } else if (sortColumn === "drugs") {
+                const aDrugs = drugData[a.id] ||
+                  drugData[String(a.id)] ||
+                  (a.name && drugData[a.name.toLowerCase()]) || {
+                    xanax: 0,
+                    fhc: 0,
+                  };
+                const bDrugs = drugData[b.id] ||
+                  drugData[String(b.id)] ||
+                  (b.name && drugData[b.name.toLowerCase()]) || {
+                    xanax: 0,
+                    fhc: 0,
+                  };
+                av = aDrugs.xanax + aDrugs.fhc;
+                bv = bDrugs.xanax + bDrugs.fhc;
+              }
+
+              if (typeof av === "string") {
+                return sortDirection === "asc"
+                  ? av.localeCompare(bv)
+                  : bv.localeCompare(av);
+              }
+
+              return sortDirection === "asc" ? av - bv : bv - av;
+            });
+            return sorted;
+          };
+
+          const renderTable = () => {
+            const sortedMembers = sortMembers();
+            const tbody = DOM.$("#factionMembersBody");
+            if (!tbody) return;
+
+            if (armoryLoading) {
+              tbody.innerHTML = `<tr><td colspan="6" style="padding: 16px; text-align: center; color: var(--text-muted);">Loading armory data...</td></tr>`;
+              return;
+            }
+
+            // Debug: Check member ID matching
+            console.log(
+              "Rendering table with member IDs:",
+              sortedMembers
+                .slice(0, 3)
+                .map((m) => ({ id: m.id, name: m.name })),
+            );
+            console.log("[DEBUG] Drug data keys:", Object.keys(drugData));
+
+            tbody.innerHTML = sortedMembers
+              .map((m, index) => {
+                let drugDisplay;
+
+                if (!hasArmoryAccess) {
+                  // No permission - show N/A
+                  drugDisplay = `<span style="color: var(--text-muted);">N/A</span>`;
+                } else {
+                  // Have permission - show actual data
+                  const drugs = drugData[m.id] ||
+                    drugData[String(m.id)] ||
+                    (m.name && drugData[m.name.toLowerCase()]) || {
+                      xanax: 0,
+                      fhc: 0,
+                    };
+                  const totalDrugs = drugs.xanax + drugs.fhc;
+                  drugDisplay =
+                    totalDrugs > 0
+                      ? `<span title="Xanax: ${drugs.xanax}, FHC: ${drugs.fhc}">${drugs.xanax > 0 ? `<span style="color: #ff6b6b;">X:${drugs.xanax}</span>` : ""}${drugs.xanax > 0 && drugs.fhc > 0 ? " " : ""}${drugs.fhc > 0 ? `<span style="color: #4ecdc4;">F:${drugs.fhc}</span>` : ""}</span>`
+                      : `<span style="color: var(--text-muted);">-</span>`;
+                }
+
+                return `
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px; color: var(--text);">${index + 1}</td>
+                <td style="padding: 8px; color: var(--accent); font-weight: 600;">${Formatters.escapeHtml(m.name)}</td>
+                <td style="padding: 8px; color: var(--text-muted); text-align: center;"> ${m.level || "?"}</td>
+                <td style="padding: 8px; color: var(--success); text-align: center;">${m.attacks || 0}</td>
+                <td style="padding: 8px; text-align: center; font-size: 0.85em;">${drugDisplay}</td>
+                <td style="padding: 8px; color: var(--accent); text-align: right; font-weight: 600;">${Formatters.number(m.score || 0)}</td>
+              </tr>
+            `;
+              })
+              .join("");
+
+            // Update sort indicators
+            ["rank", "name", "level", "attacks", "drugs", "score"].forEach(
+              (col) => {
+                const header = DOM.$(`#sort-${col}`);
+                if (header) {
+                  const baseText = {
+                    rank: "#",
+                    name: "Name",
+                    level: "Level",
+                    attacks: "Attacks",
+                    drugs: "Drugs",
+                    score: "Score",
+                  }[col];
+                  const indicator =
+                    col === sortColumn
+                      ? sortDirection === "asc"
+                        ? " ▲"
+                        : " ▼"
+                      : "";
+                  header.innerHTML = `${baseText}${indicator}`;
+                  header.style.color =
+                    col === sortColumn ? "var(--accent)" : "var(--text-muted)";
+                }
+              },
+            );
+          };
+
+          const handleSort = (column) => {
+            if (sortColumn === column) {
+              sortDirection = sortDirection === "asc" ? "desc" : "asc";
+            } else {
+              sortColumn = column;
+              sortDirection = column === "name" ? "asc" : "desc";
+            }
+            renderTable();
+          };
+
+          // Generate items list
+          const itemsList =
+            items.length > 0
+              ? items
+                  .map(
+                    (item) => `
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border);">
+                  <span style="color: var(--text);">${Formatters.escapeHtml(item.name)}</span>
+                  <span style="color: var(--accent); font-weight: 600;">x${item.quantity}</span>
+                </div>
+              `,
+                  )
+                  .join("")
+              : '<div style="color: var(--text-muted); padding: 8px 0;">No items rewarded</div>';
+
+          // Calculate total faction drug usage
+          const totalDrugs = Object.values(drugData).reduce(
+            (acc, d) => ({ xanax: acc.xanax + d.xanax, fhc: acc.fhc + d.fhc }),
+            { xanax: 0, fhc: 0 },
+          );
+
+          detailsCard.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <div class="section-title" style="margin: 0;">
+                📊 ${Formatters.escapeHtml(faction.name)} ${isWinner ? "🏆" : ""}
+              </div>
+              <button id="closeFactionDetails" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.2em; padding: 4px 8px;">✕</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 24px;">
+              <!-- Rewards Section -->
+              <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px;">
+                <h4 style="color: var(--accent); margin: 0 0 12px 0;">💰 Rewards</h4>
+                <div style="margin-bottom: 12px;">
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: var(--text-muted);">Respect</span>
+                    <span style="color: var(--success); font-weight: 600;">+${Formatters.number(rewards.respect || 0)}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: var(--text-muted);">Points</span>
+                    <span style="color: var(--accent); font-weight: 600;">${Formatters.number(rewards.points || 0)}</span>
+                  </div>
+                </div>
+                <div style="border-top: 1px solid var(--border); padding-top: 12px;">
+                  <div style="color: var(--text-muted); font-size: 0.85em; margin-bottom: 8px;">Items (${items.length})</div>
+                  ${itemsList}
+                </div>
+              </div>
+
+              <!-- Stats Summary -->
+              <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px;">
+                <h4 style="color: var(--accent); margin: 0 0 12px 0;">📈 Stats Summary</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Total Score</span>
+                  <span style="color: var(--text); font-weight: 600;">${Formatters.number(faction.score || 0)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Total Attacks</span>
+                  <span style="color: var(--text); font-weight: 600;">${faction.stats?.wins || 0}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                  <span style="color: var(--text-muted);">Members</span>
+                  <span style="color: var(--text); font-weight: 600;">${members.length}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 8px; border-top: 1px solid var(--border);">
+                  <span style="color: var(--text-muted);">Drugs Taken</span>
+                  <span style="color: #ff6b6b; font-weight: 600;">${hasArmoryAccess ? `X:${totalDrugs.xanax} F:${totalDrugs.fhc}` : "N/A"}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Members Table -->
+            <div style="background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px;">
+              <h4 style="color: var(--accent); margin: 0 0 12px 0;">👥 Members (${members.length})</h4>
+              <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                      <th id="sort-rank" style="padding: 8px; text-align: left; color: var(--accent); font-weight: 600; cursor: pointer; user-select: none;"># ▼</th>
+                      <th id="sort-name" style="padding: 8px; text-align: left; color: var(--text-muted); font-weight: 500; cursor: pointer; user-select: none;">Name</th>
+                      <th id="sort-level" style="padding: 8px; text-align: center; color: var(--text-muted); font-weight: 500; cursor: pointer; user-select: none;">Level</th>
+                      <th id="sort-attacks" style="padding: 8px; text-align: center; color: var(--text-muted); font-weight: 500; cursor: pointer; user-select: none;">Attacks</th>
+                      <th id="sort-drugs" style="padding: 8px; text-align: center; color: var(--text-muted); font-weight: 500; cursor: pointer; user-select: none;">Drugs</th>
+                      <th id="sort-score" style="padding: 8px; text-align: right; color: var(--accent); font-weight: 600; cursor: pointer; user-select: none;">Score ▼</th>
+                    </tr>
+                  </thead>
+                  <tbody id="factionMembersBody">
+                    <tr><td colspan="6" style="padding: 16px; text-align: center; color: var(--text-muted);">Loading armory data...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          `;
+
+          // Insert after faction report section
+          if (this.els.factionReportSection) {
+            this.els.factionReportSection.parentNode.insertBefore(
+              detailsCard,
+              this.els.factionReportSection.nextSibling,
+            );
+          }
+
+          // Start loading armory data
+          loadArmoryData();
+
+          // Bind sort handlers
+          ["rank", "name", "level", "attacks", "drugs", "score"].forEach(
+            (col) => {
+              const header = DOM.$(`#sort-${col}`);
+              if (header) {
+                header.addEventListener("click", () => handleSort(col));
+              }
+            },
+          );
+
+          // Bind close button
+          const closeBtn = DOM.$("#closeFactionDetails");
+          if (closeBtn) {
+            closeBtn.addEventListener("click", () => {
+              detailsCard.remove();
+            });
+          }
+        },
+
+        async loadFactionReport(
+          warId,
+          factionId,
+          factionName,
+          warStart,
+          warEnd,
+        ) {
+          this.showStatus(`Loading report for ${factionName}...`, "info");
+
+          try {
+            // Check if this is user's faction or enemy (use global userFactionId)
+            const isOwnFaction = String(factionId) === String(userFactionId);
+            console.log(
+              `Faction ${factionId} vs user ${userFactionId}: isOwnFaction=${isOwnFaction}`,
+            );
+
+            // Fetch the ranked war report
+            const report = await TornAPI.getRankedWarReport(warId);
+            console.log(
+              `[DEBUG] Ranked war report for ${factionName}:`,
+              report,
+            );
+
+            let respectByMember = {};
+            let drugsByMember = {};
+
+            if (isOwnFaction) {
+              // Own faction - fetch attacks to get individual respect
+              try {
+                const attacks = await TornAPI.getFactionAttacks(
+                  factionId,
+                  warStart,
+                  warEnd,
+                );
+                const attacksList = Array.isArray(attacks)
+                  ? attacks
+                  : attacks?.attacks || [];
+
+                attacksList.forEach((attack) => {
+                  const attackerId = attack.attacker_id || attack.attacker?.id;
+                  const respect = attack.respect_gain || 0;
+                  if (attackerId && respect) {
+                    const normalizedId = String(attackerId);
+                    respectByMember[normalizedId] =
+                      (respectByMember[normalizedId] || 0) + respect;
+                  }
+                });
+                console.log("[DEBUG] Respect by member:", respectByMember);
+              } catch (attackError) {
+                console.warn(
+                  "[DEBUG] Failed to load attacks:",
+                  attackError.message,
+                );
+              }
+
+              // Fetch armory news to get drug usage
+              try {
+                const newsEntries = await TornAPI.getFactionArmoryNews(
+                  factionId,
+                  warStart,
+                  warEnd,
+                );
+                // Parse drug usage per member
+                drugsByMember = this.parseArmoryDrugs(newsEntries, report);
+                console.log("[DEBUG] Drugs by member:", drugsByMember);
+              } catch (armoryError) {
+                console.warn(
+                  "[DEBUG] Failed to load armory news:",
+                  armoryError.message,
+                );
+              }
+            } else {
+              console.log("[DEBUG] Enemy faction - showing report data only");
+            }
+
+            // Show the faction report section
+            if (this.els.factionReportSection) {
+              this.els.factionReportSection.classList.remove("hidden");
+            }
+
+            // Clear and render
+            if (this.els.factionReportContent) {
+              DOM.clear(this.els.factionReportContent);
+              this.renderFactionReportTable(
+                report,
+                factionName,
+                warId,
+                factionId,
+                respectByMember,
+                drugsByMember,
+                isOwnFaction,
+              );
+            }
+
+            this.showStatus(`Report loaded for ${factionName}`, "success");
+          } catch (error) {
+            console.error("[DEBUG] Failed to load faction report:", error);
+            this.showStatus(`Failed to load report: ${error.message}`, "error");
+          }
+        },
+
+        renderFactionReportTable(
+          report,
+          factionName,
+          warId,
+          factionId,
+          respectByMember = {},
+          drugsByMember = {},
+          isOwnFaction = false,
+        ) {
+          // Extract members data from the report
+          const factions = report.factions || [];
+          const targetFaction =
+            factions.find((f) => String(f.id) === String(factionId)) ||
+            factions[0];
+
+          if (!targetFaction || !targetFaction.members) {
+            this.els.factionReportContent.innerHTML = `<div class="error">No member data available for ${factionName}</div>`;
+            return;
+          }
+
+          const members = Array.isArray(targetFaction.members)
+            ? targetFaction.members
+            : Object.values(targetFaction.members);
+
+          // Prepare table data - include respect and drugs for own faction
+          const tableData = members.map((m, index) => {
+            const memberId = String(m.id);
+            const respect = isOwnFaction ? respectByMember[memberId] || 0 : 0;
+            const drugs = isOwnFaction
+              ? drugsByMember[memberId] || { xanax: 0, fhc: 0 }
+              : { xanax: 0, fhc: 0 };
+
+            return {
+              rank: index + 1,
+              name: m.name || `Player ${m.id}`,
+              level: m.level || "?",
+              attacks: m.attacks || 0,
+              score: m.score || 0,
+              respect: respect,
+              drugs: drugs,
+            };
+          });
+
+          // Sort state
+          let sortColumn = isOwnFaction ? "respect" : "score";
+          let sortDirection = "desc";
+
+          const renderTable = () => {
+            const sorted = [...tableData].sort((a, b) => {
+              let av = a[sortColumn];
+              let bv = b[sortColumn];
+
+              // Handle drugs sorting (sort by total)
+              if (sortColumn === "drugs") {
+                av = (a.drugs?.xanax || 0) + (a.drugs?.fhc || 0);
+                bv = (b.drugs?.xanax || 0) + (b.drugs?.fhc || 0);
+              }
+
+              if (typeof av === "string") {
+                av = av.toLowerCase();
+                bv = bv.toLowerCase();
+              }
+
+              if (av < bv) return sortDirection === "asc" ? -1 : 1;
+              if (av > bv) return sortDirection === "asc" ? 1 : -1;
+              return 0;
+            });
+
+            const rows = sorted
+              .map(
+                (m, i) => `
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 8px; color: var(--text);">${i + 1}</td>
+                <td style="padding: 8px; color: var(--accent); font-weight: 600;">${Formatters.escapeHtml(m.name)}</td>
+                <td style="padding: 8px; color: var(--text-muted); text-align: center;">${m.level}</td>
+                <td style="padding: 8px; color: var(--success); text-align: center;">${m.attacks}</td>
+                <td style="padding: 8px; color: var(--text); text-align: right; font-weight: 600;">${Formatters.number(m.score)}</td>
+                ${isOwnFaction ? `<td style="padding: 8px; color: var(--accent2); text-align: right;">+${Formatters.number(m.respect)}</td>` : ""}
+                ${isOwnFaction ? `<td style="padding: 8px; text-align: center; font-size: 0.85em;">${m.drugs.xanax > 0 || m.drugs.fhc > 0 ? `<span title="Xanax: ${m.drugs.xanax}, FHC: ${m.drugs.fhc}">${m.drugs.xanax > 0 ? `<span style="color: #ff6b6b;">X:${m.drugs.xanax}</span>` : ""}${m.drugs.xanax > 0 && m.drugs.fhc > 0 ? " " : ""}${m.drugs.fhc > 0 ? `<span style="color: #4ecdc4;">F:${m.drugs.fhc}</span>` : ""}</span>` : `<span style="color: var(--text-muted);">-</span>`}</td>` : ""}
+              </tr>
+            `,
+              )
+              .join("");
+
+            const headers = [
+              { key: "rank", label: "#", align: "left" },
+              { key: "name", label: "Name", align: "left" },
+              { key: "level", label: "Level", align: "center" },
+              { key: "attacks", label: "Attacks", align: "center" },
+              { key: "score", label: "Score", align: "right" },
+              ...(isOwnFaction
+                ? [
+                    { key: "respect", label: "Respect", align: "right" },
+                    { key: "drugs", label: "Drugs", align: "center" },
+                  ]
+                : []),
+            ];
+
+            const headerHTML = headers
+              .map((h) => {
+                const isActive = sortColumn === h.key;
+                const arrow = isActive
+                  ? sortDirection === "asc"
+                    ? " ▲"
+                    : " ▼"
+                  : "";
+                const color = isActive ? "var(--accent)" : "var(--text-muted)";
+                return `<th id="fr-sort-${h.key}" style="padding: 8px; text-align: ${h.align}; color: ${color}; font-weight: ${isActive ? 600 : 500}; cursor: pointer; user-select: none;">${h.label}${arrow}</th>`;
+              })
+              .join("");
+
+            this.els.factionReportContent.innerHTML = `
+              <div style="margin-bottom: 16px;">
+                <div style="color: var(--text-muted); font-size: 0.9em;">Report for</div>
+                <div style="color: var(--accent); font-size: 1.3em; font-weight: 700;">${Formatters.escapeHtml(factionName)}</div>
+                <div style="color: var(--text-muted); font-size: 0.8em;">War #${warId} • ${members.length} members</div>
+              </div>
+              <div class="table-container">
+                <table style="width: 100%; border-collapse: collapse; font-size: 0.9em;">
+                  <thead>
+                    <tr style="border-bottom: 2px solid var(--border);">
+                      ${headerHTML}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows}
+                  </tbody>
+                </table>
+              </div>
+            `;
+
+            // Bind sort handlers
+            headers.forEach((h) => {
+              const th = DOM.$(`#fr-sort-${h.key}`);
+              if (th) {
+                th.addEventListener("click", () => {
+                  if (sortColumn === h.key) {
+                    sortDirection = sortDirection === "asc" ? "desc" : "asc";
+                  } else {
+                    sortColumn = h.key;
+                    sortDirection = h.key === "name" ? "asc" : "desc";
+                  }
+                  renderTable();
+                });
+              }
+            });
+          };
+
+          renderTable();
+        },
+
+        showStatus(message, type = "info") {
+          EventBus.emit("status", { message, type });
+          console.log(`[DEBUG] [${type.toUpperCase()}] ${message}`);
+        },
+
+        showTab(tabId) {
+          // Hide all tab contents
+          DOM.$$(".tab-content").forEach((el) => el.classList.remove("active"));
+          // Show selected tab content
+          const selectedTab = DOM.$(`#tab-${tabId}`);
+          if (selectedTab) selectedTab.classList.add("active");
+
+          // Update tab buttons
+          DOM.$$(".tab").forEach((btn) => btn.classList.remove("active"));
+          const clickedBtn = DOM.$(`[data-tab="${tabId}"]`);
+          if (clickedBtn) clickedBtn.classList.add("active");
+        },
+      };
+
+      // Div Name Click Handler - Click any div with data-div-name to see its name
+      document.addEventListener("click", (e) => {
+        const div = e.target.closest("[data-div-name]");
+        if (div) {
+          // Toggle the show-name class to keep name visible
+          div.classList.toggle("show-name");
+          // Also log to console
+        }
+      });
+
+      // Initialize
+      window.addEventListener("DOMContentLoaded", () => App.init());
+    </script>
+  </body>
+</html>
