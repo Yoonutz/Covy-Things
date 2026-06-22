@@ -526,11 +526,14 @@ if(!reduce){(function camera(){const t=Date.now()*0.0002;const dx=Math.sin(t)*8,
   for(const k in views) views[k].classList.add('hidden');  // none composited until routed
   route();   // honor deep link in the URL hash (else lands on series intro)
   await loadTracks();
-  // autostart the theme (quiet). Browsers block sound autoplay, so also arm a
-  // one-shot start on the first interaction as a fallback.
+  // Autostart: browsers forbid AUDIBLE autoplay before a gesture, but allow MUTED
+  // autoplay. So start playing muted on load, then unmute on the first interaction —
+  // the track is already running and goes audible the instant the user touches anything.
   if(tracks.length){
+    theme.muted=true;
     playTrack();
-    const go=()=>{ if(!playing) playTrack(); removeEventListener('pointerdown',go); removeEventListener('keydown',go); };
-    addEventListener('pointerdown',go,{once:true}); addEventListener('keydown',go,{once:true});
+    const go=()=>{ theme.muted=false; if(theme.paused) playTrack(); else {playing=true; updatePlayBtn();}
+      ['pointerdown','keydown','touchstart'].forEach(ev=>removeEventListener(ev,go)); };
+    ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,go,{once:true}));
   }
 })();
