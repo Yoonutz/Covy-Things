@@ -316,7 +316,7 @@ function bindReader(){
   document.getElementById('zNext').onclick=()=>turn(1);
   document.getElementById('zPrev').onclick=()=>turn(-1);
   addEventListener('keydown',e=>{
-    if(view!=='reader')return;
+    if(view!=='reader'||!lightbox.hidden)return;   // lightbox open -> arrows step panels, not pages
     if(e.key==='ArrowRight'||e.key===' ')turn(1);
     if(e.key==='ArrowLeft')turn(-1);
   });
@@ -380,14 +380,22 @@ function setZoom(on){ zoomOn=on; zoomBtn.classList.toggle('on',on); zoomBtn.setA
   if(book) book.classList.toggle('zoom',on); }
 zoomBtn.onclick=()=>setZoom(!zoomOn);
 
-let lbScale=1, lbX=0, lbY=0, lbDrag=null;
+let lbScale=1, lbX=0, lbY=0, lbDrag=null, lbList=[], lbIdx=0;
+const lbPrevBtn=document.getElementById('lbPrev'), lbNextBtn=document.getElementById('lbNext'), lbCount=document.getElementById('lbCount');
 function lbApply(){ lbImg.style.transform=`translate(${lbX}px,${lbY}px) scale(${lbScale})`; }
+function lbShow(){ lbScale=1; lbX=0; lbY=0; lbImg.src=lbList[lbIdx]||''; lbApply();
+  lbCount.textContent=lbList.length?((lbIdx+1)+' / '+lbList.length):'';
+  lbPrevBtn.disabled=lbIdx<=0; lbNextBtn.disabled=lbIdx>=lbList.length-1; }
+function lbGo(d){ const n=lbIdx+d; if(n<0||n>=lbList.length) return; lbIdx=n; lbShow(); }
 function openLightbox(src){
-  lbImg.src=src; lbScale=1; lbX=0; lbY=0; lbApply();
-  lightbox.hidden=false;
+  lbList = ROWS.flat().map(p=>av(p.src));   // every panel of this book, in reading order
+  lbIdx = Math.max(0, lbList.indexOf(src));
+  lightbox.hidden=false; lbShow();
 }
 function closeLightbox(){ lightbox.hidden=true; lbImg.src=''; }
 document.getElementById('lbClose').onclick=closeLightbox;
+lbPrevBtn.onclick=e=>{ e.stopPropagation(); lbGo(-1); };
+lbNextBtn.onclick=e=>{ e.stopPropagation(); lbGo(1); };
 lightbox.addEventListener('click',e=>{ if(e.target===lightbox) closeLightbox(); });
 lightbox.addEventListener('wheel',e=>{ e.preventDefault();
   const f=e.deltaY<0?1.15:1/1.15; lbScale=Math.min(8,Math.max(1,lbScale*f));
@@ -474,6 +482,10 @@ soundBtn.onclick=()=>{ const open=player.hidden; player.hidden=!open; soundBtn.c
 /* global keys: ? = help, Esc = close lightbox/help then navigate up */
 addEventListener('keydown',e=>{
   if(e.key==='?'){toggleHelp();return;}
+  if(!lightbox.hidden){   // magnify open: arrows step through panels
+    if(e.key==='ArrowRight'){lbGo(1);return;}
+    if(e.key==='ArrowLeft'){lbGo(-1);return;}
+  }
   if(e.key==='Escape'){
     if(!lightbox.hidden){closeLightbox();return;}
     if(!helpEl.hidden){toggleHelp(false);return;}

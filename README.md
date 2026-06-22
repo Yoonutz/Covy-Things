@@ -10,6 +10,40 @@ LANDING ──Enter──▶ LIBRARY ──pick book──▶ READER ──‹ L
  bio, Story so far)  covers)                 magnify, per-book scene)
 ```
 
+## The Story
+
+> *Wanted For Nothing.*
+
+In the ruins of the survivor settlements, fourteen million was stolen from a green
+leaf and its courier left for dead. A masked figure in a hockey mask and a number-13
+jersey — **M125CC** — found him. Covenant answered. What began as one act of vengeance
+became a war that would not end.
+
+The Crows of the **SHAT faction** prey on the weak, and they never stay dead. They
+mock the armor, plant the bombs, and dare Covenant to respond — and Covenant always
+does. **M125CC** leads with rage. **Fitz** keeps the balance. **Sym** pulls the
+strings. *One leads, one balances, one plans — together, Covenant stands.*
+
+**Covenant never forgets. Covenant never forgives.**
+
+### Chapters
+
+1. **Left For Dead** — *The Crows Wanted Proof.* A courier is robbed of fourteen
+   million and left to die. M125CC finds him — and brings the reckoning.
+2. **Walk Toward Danger** — *No Mercy For The Crows.* They call him a coward for
+   hiding in the suit. Covenant locks the target on SHAT's HQ and burns it down.
+3. **Crows Never Die** — *Covenant Never Forgives.* The Crows come back. They mock
+   the armor again. Three strongholds answer with fire.
+4. **The Silence** — *The Second Might Start One.* SHAT goes quiet. No attacks, no
+   taunts. Then a case arrives with a glow — the first bomb ended a war; the second
+   could start one.
+5. **The Rage Returns** — *Silence Was The Warning.* The quiet breaks. "Do it, or no
+   balls." Silence was the warning; the response will be fire.
+6. **The Last Drop** — *The Agent Of Chaos.* The challenge returns, the volcano wakes,
+   another mushroom cloud blooms. CocheasurErO — the agent of chaos, the reason they bleed.
+7. **The Scattering** — *Phase One.* Territory unknown. Leadership missing. Balls
+   applying for asylum: rejected. The scattering was only phase one.
+
 ## Run / deploy
 
 `books.json` and the panels load via `fetch`, so serve over HTTP (`file://` won't work):

@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <!-- persistent living scene -->
@@ -104,8 +104,10 @@
   <!-- magnifier lightbox -->
   <div class="lightbox" id="lightbox" hidden aria-modal="true" role="dialog" aria-label="Magnified panel">
     <img id="lbImg" alt="" draggable="false">
+    <button class="lb-nav lb-prev" id="lbPrev" aria-label="Previous panel">&#8249;</button>
+    <button class="lb-nav lb-next" id="lbNext" aria-label="Next panel">&#8250;</button>
     <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
-    <div class="lb-hint">scroll / pinch to zoom &middot; drag to pan &middot; Esc to close</div>
+    <div class="lb-hint">click to zoom &middot; <span id="lbCount"></span> &middot; &lsaquo; &rsaquo; panels &middot; &times; to close</div>
   </div>
 
   <!-- keyboard help overlay -->
@@ -134,6 +136,6 @@
   <div class="fx sweep"></div>
   <div class="fx grain"></div>
 
-  <script src="engine.js?v=15"></script>
+  <script src="engine.js?v=16"></script>
 </body>
 </html>
