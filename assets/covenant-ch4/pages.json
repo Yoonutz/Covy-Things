@@ -1,0 +1,163 @@
+{
+  "id": "covenant-ch4",
+  "title": "TITLE",
+  "chapter": "Chapter N",
+  "subtitle": "SUBTITLE",
+  "bio": "…",
+  "background": "assets/covenant-ch4/background.webp",
+  "cover": "assets/covenant-ch4/p1_1.webp",
+  "pages": [
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p1_1.webp",
+          "ar": 1.109
+        },
+        {
+          "src": "assets/covenant-ch4/p1_2.webp",
+          "ar": 1.27
+        },
+        {
+          "src": "assets/covenant-ch4/p1_3.webp",
+          "ar": 2.276
+        },
+        {
+          "src": "assets/covenant-ch4/p1_4.webp",
+          "ar": 2.602
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p2_1.webp",
+          "ar": 1.806
+        },
+        {
+          "src": "assets/covenant-ch4/p2_2.webp",
+          "ar": 4.046
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p3_1.webp",
+          "ar": 1.645
+        },
+        {
+          "src": "assets/covenant-ch4/p3_2.webp",
+          "ar": 1.325
+        },
+        {
+          "src": "assets/covenant-ch4/p3_3.webp",
+          "ar": 1.325
+        },
+        {
+          "src": "assets/covenant-ch4/p3_4.webp",
+          "ar": 1.769
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p4_1.webp",
+          "ar": 1.181
+        },
+        {
+          "src": "assets/covenant-ch4/p4_2.webp",
+          "ar": 1.356
+        },
+        {
+          "src": "assets/covenant-ch4/p4_3.webp",
+          "ar": 0.78
+        },
+        {
+          "src": "assets/covenant-ch4/p4_4.webp",
+          "ar": 1.102
+        },
+        {
+          "src": "assets/covenant-ch4/p4_5.webp",
+          "ar": 1.367
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p5_1.webp",
+          "ar": 2.463
+        },
+        {
+          "src": "assets/covenant-ch4/p5_2.webp",
+          "ar": 0.853
+        },
+        {
+          "src": "assets/covenant-ch4/p5_3.webp",
+          "ar": 0.944
+        },
+        {
+          "src": "assets/covenant-ch4/p5_4.webp",
+          "ar": 1.525
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p6_1.webp",
+          "ar": 0.959
+        },
+        {
+          "src": "assets/covenant-ch4/p6_2.webp",
+          "ar": 1.749
+        },
+        {
+          "src": "assets/covenant-ch4/p6_3.webp",
+          "ar": 1.275
+        },
+        {
+          "src": "assets/covenant-ch4/p6_4.webp",
+          "ar": 0.871
+        },
+        {
+          "src": "assets/covenant-ch4/p6_5.webp",
+          "ar": 1.14
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p7_1.webp",
+          "ar": 1.012
+        },
+        {
+          "src": "assets/covenant-ch4/p7_2.webp",
+          "ar": 1.163
+        },
+        {
+          "src": "assets/covenant-ch4/p7_3.webp",
+          "ar": 1.825
+        },
+        {
+          "src": "assets/covenant-ch4/p7_4.webp",
+          "ar": 1.042
+        },
+        {
+          "src": "assets/covenant-ch4/p7_5.webp",
+          "ar": 1.127
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch4/p8_1.webp",
+          "ar": 4.719
+        }
+      ]
+    }
+  ]
+}

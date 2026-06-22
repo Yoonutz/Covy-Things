@@ -1,0 +1,107 @@
+{
+  "id": "covenant-ch2",
+  "title": "TITLE",
+  "chapter": "Chapter N",
+  "subtitle": "SUBTITLE",
+  "bio": "…",
+  "background": "assets/covenant-ch2/background.webp",
+  "cover": "assets/covenant-ch2/p1_1.webp",
+  "pages": [
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch2/p1_1.webp",
+          "ar": 0.57
+        },
+        {
+          "src": "assets/covenant-ch2/p1_2.webp",
+          "ar": 0.666
+        },
+        {
+          "src": "assets/covenant-ch2/p1_3.webp",
+          "ar": 1.105
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch2/p2_1.webp",
+          "ar": 1.091
+        },
+        {
+          "src": "assets/covenant-ch2/p2_2.webp",
+          "ar": 0.423
+        },
+        {
+          "src": "assets/covenant-ch2/p2_3.webp",
+          "ar": 0.879
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch2/p3_1.webp",
+          "ar": 0.769
+        },
+        {
+          "src": "assets/covenant-ch2/p3_2.webp",
+          "ar": 0.757
+        },
+        {
+          "src": "assets/covenant-ch2/p3_3.webp",
+          "ar": 0.788
+        },
+        {
+          "src": "assets/covenant-ch2/p3_4.webp",
+          "ar": 0.733
+        },
+        {
+          "src": "assets/covenant-ch2/p3_5.webp",
+          "ar": 0.969
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch2/p4_1.webp",
+          "ar": 1.233
+        },
+        {
+          "src": "assets/covenant-ch2/p4_2.webp",
+          "ar": 0.965
+        },
+        {
+          "src": "assets/covenant-ch2/p4_3.webp",
+          "ar": 1.436
+        },
+        {
+          "src": "assets/covenant-ch2/p4_4.webp",
+          "ar": 0.872
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch2/p5_1.webp",
+          "ar": 1.42
+        },
+        {
+          "src": "assets/covenant-ch2/p5_2.webp",
+          "ar": 1.463
+        },
+        {
+          "src": "assets/covenant-ch2/p5_3.webp",
+          "ar": 1.585
+        },
+        {
+          "src": "assets/covenant-ch2/p5_4.webp",
+          "ar": 0.979
+        }
+      ]
+    }
+  ]
+}

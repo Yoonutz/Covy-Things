@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel Slicer — Covenant Chronicles</title>
+<style>
+  :root{--ash:#cfc9bc;--bone:#8b8678;--steel:#3a444a;--ember:#a8352a;--line:#222730;--cyan:#3aa0b0;--gold:#c9a23a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0a0c0e;color:var(--ash);font-family:"Space Mono",ui-monospace,monospace;
+    min-height:100vh;display:flex;flex-direction:column}
+  h1{font-size:14px;letter-spacing:.28em;text-transform:uppercase;color:#efe9dc;padding:14px 18px;border-bottom:1px solid var(--line)}
+  h1 b{color:var(--ember)}
+  .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:#0a0c0e;z-index:5}
+  .bar label{font-size:11px;letter-spacing:.1em;color:var(--bone);text-transform:uppercase}
+  input[type=text]{background:#11151a;border:1px solid var(--line);color:#efe9dc;font-family:inherit;
+    padding:7px 9px;font-size:12px;border-radius:4px;width:150px}
+  button{appearance:none;cursor:pointer;font-family:inherit;font-weight:700;letter-spacing:.12em;font-size:11px;
+    text-transform:uppercase;color:var(--ash);background:#141a20;border:1px solid var(--line);
+    padding:9px 13px;border-radius:5px;transition:border-color .2s,color .2s,background .2s}
+  button:hover{border-color:var(--ember);color:#fff}
+  button.on#tH{background:var(--cyan);border-color:var(--cyan);color:#04141a}
+  button.on#tV{background:var(--cyan);border-color:var(--cyan);color:#04141a}
+  button.on#tA{background:var(--gold);border-color:var(--gold);color:#1a1404}
+  button.go{border-color:var(--ember);color:#fff;background:rgba(168,53,42,.2)}
+  .wrap{flex:1;display:flex;min-height:0}
+  .stage{flex:1;overflow:auto;padding:20px;display:grid;place-items:start center;
+    background:repeating-conic-gradient(#0c0f12 0% 25%,#0e1216 0% 50%) 50%/24px 24px}
+  .canvas-host{position:relative;line-height:0;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+  canvas{display:block;cursor:crosshair}
+  .side{width:340px;border-left:1px solid var(--line);padding:16px;overflow:auto;display:flex;flex-direction:column;gap:12px}
+  .hint{font-size:11px;line-height:1.7;color:var(--bone)}
+  .hint b{color:var(--ash)} .hint .k{color:var(--cyan)} .hint .e{color:var(--ember)} .hint .g{color:var(--gold)}
+  textarea{width:100%;height:240px;background:#11151a;border:1px solid var(--line);color:#cfe;
+    font-family:ui-monospace,monospace;font-size:11px;padding:10px;border-radius:5px;resize:vertical;white-space:pre}
+  .count{font-size:11px;color:var(--bone)} .count b{color:#efe9dc;font-size:13px}
+  .empty{padding:40px;text-align:center;color:var(--bone);font-size:13px;line-height:2}
+  .row-cb{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--bone)}
+  hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+</style>
+</head>
+<body>
+  <h1>Panel <b>Slicer</b> — split regions, export panels + JSON</h1>
+
+  <div class="bar">
+    <input type="file" id="file" accept="image/*" style="font-size:11px">
+    <label>book id <input type="text" id="bookId" value="covenant-chN"></label>
+    <button id="tH">▬ H split</button>
+    <button id="tV">▮ V split</button>
+    <button id="tA">◢ Angle split</button>
+    <button id="undo">↶ Undo</button>
+    <button id="clear">Clear</button>
+    <button class="go" id="export" disabled>⬇ Export ZIP + JSON</button>
+  </div>
+
+  <div class="wrap">
+    <div class="stage" id="stage">
+      <div class="empty" id="empty">Load a full comic page image to begin.</div>
+      <div class="canvas-host" id="host" hidden><canvas id="cv"></canvas></div>
+    </div>
+    <div class="side">
+      <div class="count">Panels: <b id="pcount">0</b></div>
+      <div class="hint">
+        Each cut splits <b>only the region you click in</b>, and stops at that region's
+        edges + earlier cuts (intersections).<br><br>
+        <b>·</b> <span class="k">H</span> / <span class="k">V</span> split → click inside a region.<br>
+        <b>·</b> <span class="g">Angle</span> split → drag across a region (start→end sets the angle).<br>
+        <b>·</b> <b>Right-click</b> a cut line to remove it (merges back).<br>
+        <b>·</b> <b>Undo</b> = remove last cut. Reading order = top→bottom, left→right.<br>
+        <b>·</b> Angled panels export with transparent corners (webp alpha).
+      </div>
+      <hr>
+      <div class="hint"><b>After export:</b> unzip into <b>assets/&lt;book-id&gt;/</b>, paste the
+        <b>books[]</b> entry into books.json, set <b>cover</b>. Bump <b>ASSET_V</b> in engine.js
+        if you reuse filenames.</div>
+      <textarea id="json" readonly placeholder="JSON appears here after you add cuts…"></textarea>
+    </div>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fileEl=$('file'), cv=$('cv'), ctx=cv.getContext('2d');
+const host=$('host'), empty=$('empty'), exportBtn=$('export'), jsonEl=$('json');
+const pcountEl=$('pcount'), bookIdEl=$('bookId');
+
+let img=null, full=null, IW=0, IH=0, scale=1;
+let root=null;                 // region tree root
+let tool='H';                  // 'H' | 'V' | 'A'
+let dragStart=null, dragCur=null, dragRegion=null;   // angle drag state
+
+/* ---------- geometry ---------- */
+const EPS=1e-6;
+function bbox(poly){let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;for(const p of poly){x0=Math.min(x0,p.x);y0=Math.min(y0,p.y);x1=Math.max(x1,p.x);y1=Math.max(y1,p.y);}return {x0,y0,x1,y1};}
+function centroid(poly){let x=0,y=0;for(const p of poly){x+=p.x;y+=p.y;}return {x:x/poly.length,y:y/poly.length};}
+function pointInPoly(pt,poly){let c=false;for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+  const a=poly[i],b=poly[j];
+  if(((a.y>pt.y)!==(b.y>pt.y)) && (pt.x < (b.x-a.x)*(pt.y-a.y)/(b.y-a.y)+a.x)) c=!c;}return c;}
+// signed side of point vs line P->Q
+function side(P,Q,p){return (Q.x-P.x)*(p.y-P.y)-(Q.y-P.y)*(p.x-P.x);}
+function intersect(a,b,P,Q){ // segment a-b vs infinite line P-Q
+  const sa=side(P,Q,a), sb=side(P,Q,b), t=sa/(sa-sb);
+  return {x:a.x+t*(b.x-a.x), y:a.y+t*(b.y-a.y)};}
+// split convex poly by infinite line P-Q -> [polyA(side<0), polyB(side>0)] and chord pts
+function splitPoly(poly,P,Q){
+  const A=[],B=[],chord=[];
+  for(let i=0;i<poly.length;i++){
+    const cur=poly[i], nxt=poly[(i+1)%poly.length];
+    const sc=side(P,Q,cur), sn=side(P,Q,nxt);
+    if(Math.abs(sc)<=EPS) chord.push(cur);                  // vertex lies ON the cut line
+    if(sc<=EPS) A.push(cur);
+    if(sc>=-EPS) B.push(cur);
+    if((sc<-EPS&&sn>EPS)||(sc>EPS&&sn<-EPS)){const I=intersect(cur,nxt,P,Q);A.push(I);B.push(I);chord.push(I);}
+  }
+  if(A.length<3||B.length<3||chord.length<2) return null;   // degenerate / line misses region
+  return {A,B,chord:[chord[0],chord[chord.length-1]]};
+}
+function leaves(n,out=[]){ if(!n.split) out.push(n); else {leaves(n.split.a,out);leaves(n.split.b,out);} return out;}
+function internals(n,out=[]){ if(n.split){out.push(n);internals(n.split.a,out);internals(n.split.b,out);} return out;}
+function findLeaf(pt,n=root){ if(!n.split) return pointInPoly(pt,n.poly)?n:null; return findLeaf(pt,n.split.a)||findLeaf(pt,n.split.b); }
+
+/* ---------- cuts ---------- */
+let history=[];   // stack of nodes that were split (for undo)
+function lineFor(region,tool,pt,p2){
+  const bb=bbox(region.poly);
+  if(tool==='H') return [{x:bb.x0-10,y:pt.y},{x:bb.x1+10,y:pt.y}];
+  if(tool==='V') return [{x:pt.x,y:bb.y0-10},{x:pt.x,y:bb.y1+10}];
+  return [pt,p2];   // angle: through the two drag points
+}
+function doSplit(region,P,Q){
+  const r=splitPoly(region.poly,P,Q); if(!r) return false;
+  region.split={P,Q,chord:r.chord,angled:(tool==='A'),
+    a:{poly:r.A,split:null}, b:{poly:r.B,split:null}};
+  history.push(region); redraw(); updateOut(); return true;
+}
+function removeSplit(node){ if(node&&node.split){node.split=null; history=history.filter(h=>h!==node); redraw(); updateOut();} }
+
+$('undo').onclick=()=>{const n=history.pop(); if(n){n.split=null; redraw(); updateOut();}};
+$('clear').onclick=()=>{ if(root){root={poly:root.poly,split:null}; history=[]; redraw(); updateOut();} };
+
+/* ---------- tools ---------- */
+function setTool(t){tool=t;['tH','tV','tA'].forEach(id=>$(id).classList.toggle('on',id==='t'+t));
+  cv.style.cursor=t==='A'?'crosshair':(t==='H'?'row-resize':'col-resize');}
+$('tH').onclick=()=>setTool('H'); $('tV').onclick=()=>setTool('V'); $('tA').onclick=()=>setTool('A');
+
+/* ---------- load ---------- */
+fileEl.onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();
+  im.onload=()=>{img=im;IW=im.naturalWidth;IH=im.naturalHeight;
+    full=document.createElement('canvas');full.width=IW;full.height=IH;full.getContext('2d').drawImage(im,0,0);
+    const maxW=Math.min(IW,innerWidth-380), maxH=innerHeight-170;
+    scale=Math.min(maxW/IW,maxH/IH,1);
+    cv.width=Math.round(IW*scale);cv.height=Math.round(IH*scale);
+    root={poly:[{x:0,y:0},{x:IW,y:0},{x:IW,y:IH},{x:0,y:IH}],split:null};history=[];
+    empty.hidden=true;host.hidden=false;exportBtn.disabled=false;setTool('H');redraw();updateOut();};
+  im.src=URL.createObjectURL(f);};
+
+/* ---------- coords ---------- */
+const toS=v=>v*scale;
+function evpt(e){const r=cv.getBoundingClientRect();return {x:(e.clientX-r.left)/scale, y:(e.clientY-r.top)/scale};}
+
+/* ---------- interaction ---------- */
+cv.addEventListener('mousedown',e=>{ if(e.button!==0||!root) return; const pt=evpt(e);
+  const region=findLeaf(pt); if(!region) return;
+  if(tool==='A'){ dragStart=pt; dragRegion=region; dragCur=pt; }
+  else { const [P,Q]=lineFor(region,tool,pt); doSplit(region,P,Q); }
+});
+cv.addEventListener('mousemove',e=>{ if(!dragStart) return; dragCur=evpt(e); redraw(); drawPreview(); });
+addEventListener('mouseup',e=>{ if(!dragStart) return;
+  const a=dragStart,b=dragCur; dragStart=null;
+  if(Math.hypot(b.x-a.x,b.y-a.y) > 6/scale){ doSplit(dragRegion,a,b); } else { redraw(); }
+  dragRegion=null;
+});
+cv.addEventListener('contextmenu',e=>{ e.preventDefault(); if(!root) return; const pt=evpt(e);
+  // find internal node whose chord is nearest the cursor
+  let best=null,bd=12/scale;
+  for(const n of internals(root)){ const [c1,c2]=n.split.chord; const d=distToSeg(pt,c1,c2); if(d<bd){bd=d;best=n;} }
+  if(best) removeSplit(best);
+});
+function distToSeg(p,a,b){const dx=b.x-a.x,dy=b.y-a.y,L=dx*dx+dy*dy;
+  let t=L?((p.x-a.x)*dx+(p.y-a.y)*dy)/L:0; t=Math.max(0,Math.min(1,t));
+  return Math.hypot(p.x-(a.x+t*dx), p.y-(a.y+t*dy));}
+
+/* ---------- ordering: leaves -> reading order, grouped into y-bands (pages) ---------- */
+function ordered(){
+  const ls=leaves(root).map(n=>{const bb=bbox(n.poly);return {n,bb,cx:(bb.x0+bb.x1)/2,cy:(bb.y0+bb.y1)/2,h:bb.y1-bb.y0};});
+  if(!ls.length) return [];
+  ls.sort((a,b)=>a.cy-b.cy);
+  const medH=ls.map(l=>l.h).sort((a,b)=>a-b)[Math.floor(ls.length/2)];
+  const bands=[]; let cur=[ls[0]];
+  for(let i=1;i<ls.length;i++){ if(ls[i].cy - cur[cur.length-1].cy > medH*0.5){ bands.push(cur); cur=[ls[i]]; } else cur.push(ls[i]); }
+  bands.push(cur);
+  bands.forEach(b=>b.sort((a,b)=>a.cx-b.cx));
+  return bands;   // array of rows, each row array of {n,bb,...}
+}
+
+/* ---------- draw ---------- */
+function polyPath(c,poly,f){c.beginPath();poly.forEach((p,i)=>{const x=toS(p.x),y=toS(p.y);i?c.lineTo(x,y):c.moveTo(x,y);});c.closePath();}
+function redraw(){
+  if(!img) return;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(img,0,0,cv.width,cv.height);
+  const bands=ordered();
+  bands.forEach((row,ri)=>row.forEach((l,ci)=>{
+    ctx.fillStyle=((ri+ci)%2)?'rgba(168,53,42,.08)':'rgba(58,160,176,.08)';
+    polyPath(ctx,l.n.poly);ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.9)';ctx.font='bold 13px monospace';
+    ctx.fillText(`p${ri+1}_${ci+1}`, toS(l.bb.x0)+6, toS(l.bb.y0)+18);
+  }));
+  for(const n of internals(root)){ const [a,b]=n.split.chord;
+    ctx.strokeStyle=n.split.angled?'#c9a23a':'#3aa0b0';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(toS(a.x),toS(a.y));ctx.lineTo(toS(b.x),toS(b.y));ctx.stroke(); }
+}
+function drawPreview(){ if(!dragStart||!dragCur) return;
+  ctx.strokeStyle='#c9a23a';ctx.setLineDash([6,5]);ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(toS(dragStart.x),toS(dragStart.y));ctx.lineTo(toS(dragCur.x),toS(dragCur.y));ctx.stroke();
+  ctx.setLineDash([]); }
+
+/* ---------- output ---------- */
+function updateOut(){
+  const id=bookIdEl.value.trim()||'covenant-chN';
+  const bands=ordered(); let n=0;
+  const pages=bands.map((row,ri)=>({panels:row.map((l,ci)=>{n++;
+    return {src:`assets/${id}/p${ri+1}_${ci+1}.webp`, ar:+((l.bb.x1-l.bb.x0)/(l.bb.y1-l.bb.y0)).toFixed(3)};})}));
+  pcountEl.textContent=n;
+  const entry={id,title:"TITLE",chapter:"Chapter N",subtitle:"SUBTITLE",bio:"…",
+    background:`assets/${id}/background.webp`,cover:`assets/${id}/p1_1.webp`,pages};
+  jsonEl.value=JSON.stringify(entry,null,2);
+}
+bookIdEl.oninput=updateOut;
+
+/* ---------- export ---------- */
+async function cropLeaf(poly,bb){
+  const w=Math.max(1,Math.round(bb.x1-bb.x0)), h=Math.max(1,Math.round(bb.y1-bb.y0));
+  const c=document.createElement('canvas');c.width=w;c.height=h;const cx=c.getContext('2d');
+  cx.beginPath();poly.forEach((p,i)=>{const x=p.x-bb.x0,y=p.y-bb.y0;i?cx.lineTo(x,y):cx.moveTo(x,y);});cx.closePath();cx.clip();
+  cx.drawImage(full, bb.x0,bb.y0,w,h, 0,0,w,h);
+  const blob=await new Promise(res=>c.toBlob(res,'image/webp',0.9));
+  return {blob, ar:+(w/h).toFixed(3)};
+}
+exportBtn.onclick=async()=>{
+  const id=bookIdEl.value.trim()||'covenant-chN';
+  const bands=ordered(); if(!bands.length){alert('Add cuts first.');return;}
+  exportBtn.disabled=true;exportBtn.textContent='cropping…';
+  const files=[]; const pages=[];
+  for(let ri=0;ri<bands.length;ri++){ const panels=[];
+    for(let ci=0;ci<bands[ri].length;ci++){ const l=bands[ri][ci];
+      const {blob,ar}=await cropLeaf(l.n.poly,l.bb);
+      const name=`p${ri+1}_${ci+1}.webp`;
+      files.push({name,data:new Uint8Array(await blob.arrayBuffer())});
+      panels.push({src:`assets/${id}/${name}`,ar}); }
+    pages.push({panels}); }
+  const entry={id,title:"TITLE",chapter:"Chapter N",subtitle:"SUBTITLE",bio:"…",
+    background:`assets/${id}/background.webp`,cover:`assets/${id}/p1_1.webp`,pages};
+  const txt=JSON.stringify(entry,null,2);jsonEl.value=txt;
+  files.push({name:'pages.json',data:new TextEncoder().encode(txt)});
+  const zip=makeZip(files);
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([zip],{type:'application/zip'}));
+  a.download=`${id}-panels.zip`;a.click();
+  exportBtn.disabled=false;exportBtn.textContent='⬇ Export ZIP + JSON';
+};
+
+/* ---------- minimal STORE-only ZIP (no deps) ---------- */
+const CRC=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(b){let c=0xFFFFFFFF;for(let i=0;i<b.length;i++)c=CRC[(c^b[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function makeZip(files){const enc=new TextEncoder();const chunks=[];const central=[];let offset=0;
+  const u16=v=>[v&255,(v>>8)&255],u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];
+  for(const f of files){const name=enc.encode(f.name),data=f.data,crc=crc32(data);
+    const lh=[...u32(0x04034b50),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(crc),...u32(data.length),...u32(data.length),...u16(name.length),...u16(0)];
+    chunks.push(new Uint8Array(lh),name,data);central.push({name,crc,size:data.length,offset});offset+=lh.length+name.length+data.length;}
+  const cdStart=offset;const cd=[];
+  for(const c of central){const h=[...u32(0x02014b50),...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),...u32(c.crc),...u32(c.size),...u32(c.size),...u16(c.name.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(c.offset)];cd.push(new Uint8Array(h),c.name);offset+=h.length+c.name.length;}
+  const cdSize=offset-cdStart;
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(central.length),...u16(central.length),...u32(cdSize),...u32(cdStart),...u16(0)]);
+  const all=[...chunks,...cd,end];const total=all.reduce((n,a)=>n+a.length,0);const out=new Uint8Array(total);let p=0;for(const a of all){out.set(a,p);p+=a.length;}return out;}
+
+setTool('H');
+</script>
+</body>
+</html>

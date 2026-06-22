@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Covenant Chronicles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css?v=10">
+</head>
+<body>
+  <!-- persistent living scene -->
+  <div class="scene">
+    <div class="bg" id="bg"></div>
+    <div class="fog"></div>
+    <div class="fog2"></div>
+    <canvas id="ash"></canvas>
+    <div class="city-glow"></div>
+    <div class="lightning"></div>
+    <div class="color-grade"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <!-- VIEW: landing (series) -->
+  <section class="view" id="landing" aria-label="Series intro"></section>
+
+  <!-- VIEW: library (book grid) -->
+  <section class="view" id="library" aria-label="Library">
+    <div class="libhead">
+      <div class="title" id="libTitle"></div>
+      <div class="sub" id="libSub"></div>
+    </div>
+    <div class="shelf" id="shelf"></div>
+  </section>
+
+  <!-- VIEW: reader -->
+  <section class="view" id="reader" aria-label="Comic reader">
+    <header>
+      <div class="mark" id="rMark"></div>
+      <div class="sub" id="rSub"></div>
+    </header>
+
+    <div class="stage">
+      <div class="flash" id="flash"></div>
+      <div class="book" id="book" role="group" aria-label="Comic pages">
+        <div class="zones">
+          <span id="zPrev" role="button" aria-label="Previous page" tabindex="0"></span>
+          <span id="zNext" role="button" aria-label="Next page" tabindex="0"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress" id="progress"></div>
+    <div class="controls">
+      <button class="nav" id="prev" aria-label="Previous page"><span>&lsaquo;</span></button>
+      <div class="counter" id="counter">PAGE 01</div>
+      <button class="nav" id="next" aria-label="Next page"><span>&rsaquo;</span></button>
+    </div>
+    <div class="hint">tap sides &middot; arrow keys &middot; swipe</div>
+    <div class="status"><span class="dot"></span><span>Survivor Settlements</span><span id="clock">--:--:--</span><span>Year Zero</span></div>
+  </section>
+
+  <!-- back button (reader/library only) -->
+  <div class="backbar" id="backbar" hidden>
+    <button class="back" id="backBtn">&lsaquo; Library</button>
+  </div>
+
+  <!-- support -->
+  <a class="kofi" href="https://ko-fi.com/H2H41XXZWG" target="_blank" rel="noopener" aria-label="Buy me a Ko-fi">
+    <span class="kofi-ico">&#9749;</span><span class="kofi-txt">Ko-fi</span>
+  </a>
+
+  <!-- top-right utility bar -->
+  <div class="toolbar" id="toolbar" hidden>
+    <button class="tool" id="zoomBtn" hidden aria-label="Magnify panels" title="Magnify (tap a panel)">&#128269;</button>
+    <button class="tool" id="soundBtn" aria-pressed="false" aria-label="Toggle sound" title="Theme song">&#128263;</button>
+    <button class="tool" id="shareBtn" hidden aria-label="Copy share link">Link</button>
+    <button class="tool" id="helpBtn" aria-label="Keyboard help">?</button>
+  </div>
+
+  <!-- theme songs (drop mp3s in assets/audio/ + list them in assets/audio/tracks.json) -->
+  <audio id="theme" preload="none"></audio>
+  <div class="player" id="player" hidden>
+    <div class="np"><span class="np-dot" id="npDot"></span><span id="npTitle">No track loaded</span></div>
+    <div class="seekrow">
+      <span class="t" id="tCur">0:00</span>
+      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Seek">
+      <span class="t" id="tDur">0:00</span>
+    </div>
+    <div class="pctrls">
+      <button id="prevTrk" aria-label="Previous track">&#9198;</button>
+      <button id="playTrk" class="play" aria-label="Play / pause">&#9654;</button>
+      <button id="nextTrk" aria-label="Next track">&#9197;</button>
+      <button id="listTrk" aria-label="Playlist">&#9776;</button>
+    </div>
+    <div class="vol">
+      <span class="vol-ico" aria-hidden="true">&#119070;</span>
+      <input type="range" id="vol" min="0" max="100" value="15" aria-label="Volume">
+    </div>
+    <ol class="playlist" id="playlist" hidden></ol>
+  </div>
+
+  <!-- magnifier lightbox -->
+  <div class="lightbox" id="lightbox" hidden aria-modal="true" role="dialog" aria-label="Magnified panel">
+    <img id="lbImg" alt="" draggable="false">
+    <button class="lb-close" id="lbClose" aria-label="Close">&times;</button>
+    <div class="lb-hint">scroll / pinch to zoom &middot; drag to pan &middot; Esc to close</div>
+  </div>
+
+  <!-- keyboard help overlay -->
+  <div class="help" id="help" hidden role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
+    <div class="help-card">
+      <div class="help-title">Controls</div>
+      <dl>
+        <dt>&larr; &rarr;</dt><dd>Previous / next page</dd>
+        <dt>Space</dt><dd>Next page</dd>
+        <dt>Tap sides</dt><dd>Turn page</dd>
+        <dt>Swipe</dt><dd>Turn page (touch)</dd>
+        <dt>&#128269;</dt><dd>Magnify — tap a panel; click image to zoom, &times; to close</dd>
+        <dt>&#128263;</dt><dd>Toggle the theme song</dd>
+        <dt>Esc</dt><dd>Close zoom / help, then back</dd>
+        <dt>?</dt><dd>Toggle this help</dd>
+      </dl>
+      <button class="cta" id="helpClose">Close</button>
+    </div>
+  </div>
+
+  <!-- toast -->
+  <div class="toast" id="toast" hidden></div>
+
+  <!-- top overlays -->
+  <div class="fx scan"></div>
+  <div class="fx sweep"></div>
+  <div class="fx grain"></div>
+
+  <script src="engine.js?v=15"></script>
+</body>
+</html>

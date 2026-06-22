@@ -1,0 +1,15 @@
+# super-resolution models (large; download per tools/upscale.py docstring)
+models/
+*.pb
+
+# slicer / pipeline exports & intermediates
+work/
+*-panels.zip
+*.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.claude/
+.vscode/

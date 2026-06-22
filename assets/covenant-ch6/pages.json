@@ -1,0 +1,95 @@
+{
+  "id": "covenant-ch6",
+  "title": "TITLE",
+  "chapter": "Chapter 6",
+  "subtitle": "SUBTITLE",
+  "bio": "…",
+  "background": "assets/covenant-ch6/background.webp",
+  "cover": "assets/covenant-ch6/p1_1.webp",
+  "pages": [
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p1_1.webp",
+          "ar": 7.078
+        },
+        {
+          "src": "assets/covenant-ch6/p1_2.webp",
+          "ar": 8.922
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p2_1.webp",
+          "ar": 1.444
+        },
+        {
+          "src": "assets/covenant-ch6/p2_2.webp",
+          "ar": 0.849
+        },
+        {
+          "src": "assets/covenant-ch6/p2_3.webp",
+          "ar": 1.313
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p3_1.webp",
+          "ar": 1.046
+        },
+        {
+          "src": "assets/covenant-ch6/p3_2.webp",
+          "ar": 1.078
+        },
+        {
+          "src": "assets/covenant-ch6/p3_3.webp",
+          "ar": 1.222
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p4_1.webp",
+          "ar": 1.153
+        },
+        {
+          "src": "assets/covenant-ch6/p4_2.webp",
+          "ar": 0.9
+        },
+        {
+          "src": "assets/covenant-ch6/p4_3.webp",
+          "ar": 1.87
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p5_1.webp",
+          "ar": 1.437
+        },
+        {
+          "src": "assets/covenant-ch6/p5_2.webp",
+          "ar": 1.022
+        },
+        {
+          "src": "assets/covenant-ch6/p5_3.webp",
+          "ar": 1.362
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-ch6/p6_1.webp",
+          "ar": 2.901
+        }
+      ]
+    }
+  ]
+}

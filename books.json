@@ -1,0 +1,759 @@
+{
+  "series": {
+    "title": "The Covenant Chronicles",
+    "tagline": "Wanted For Nothing",
+    "bio": "A masked vigilante and his Covenant answer theft and murder with fire. They protect their own — and the Crows never stay dead.",
+    "preface": "In the ruins of the survivor settlements, fourteen million was stolen from a green leaf and its courier left for dead. M125CC found him — and Covenant answered.\n\nWhat began as one act of vengeance became a war. The Crows of the SHAT faction were wiped from the map, yet they always came back: mocking the armor, planting bombs, daring Covenant to respond. M125CC leads with rage. Fitz keeps the balance. Sym pulls the strings. One leads, one balances, one plans — together, Covenant stands.\n\nStronghold by stronghold, bomb by bomb, they protect their own and destroy what threatens them. Now SHAT is scattered — leadership missing, territory gone — but the scattering was only phase one.\n\nCovenant never forgets. Covenant never forgives."
+  },
+  "books": [
+    {
+      "id": "covenant-ch1",
+      "title": "Left For Dead",
+      "chapter": "Chapter I",
+      "subtitle": "The Crows Wanted Proof",
+      "bio": "They stole from the innocent. They mocked mercy. They challenged M125CC.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch1.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p1_1.webp",
+              "ar": 0.909
+            },
+            {
+              "src": "assets/covenant-ch1/p1_2.webp",
+              "ar": 0.912
+            },
+            {
+              "src": "assets/covenant-ch1/p1_3.webp",
+              "ar": 0.923
+            },
+            {
+              "src": "assets/covenant-ch1/p1_4.webp",
+              "ar": 0.894
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p2_1.webp",
+              "ar": 0.838
+            },
+            {
+              "src": "assets/covenant-ch1/p2_2.webp",
+              "ar": 0.71
+            },
+            {
+              "src": "assets/covenant-ch1/p2_3.webp",
+              "ar": 2.065
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p3_1.webp",
+              "ar": 1.01
+            },
+            {
+              "src": "assets/covenant-ch1/p3_2.webp",
+              "ar": 0.601
+            },
+            {
+              "src": "assets/covenant-ch1/p3_3.webp",
+              "ar": 0.663
+            },
+            {
+              "src": "assets/covenant-ch1/p3_4.webp",
+              "ar": 1.452
+            },
+            {
+              "src": "assets/covenant-ch1/p3_5.webp",
+              "ar": 1.258
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p4_1.webp",
+              "ar": 1.651
+            },
+            {
+              "src": "assets/covenant-ch1/p4_2.webp",
+              "ar": 0.473
+            },
+            {
+              "src": "assets/covenant-ch1/p4_3.webp",
+              "ar": 1.043
+            },
+            {
+              "src": "assets/covenant-ch1/p4_4.webp",
+              "ar": 1.063
+            },
+            {
+              "src": "assets/covenant-ch1/p4_5.webp",
+              "ar": 1.011
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p5_1.webp",
+              "ar": 1.559
+            },
+            {
+              "src": "assets/covenant-ch1/p5_2.webp",
+              "ar": 1.5
+            },
+            {
+              "src": "assets/covenant-ch1/p5_3.webp",
+              "ar": 0.747
+            },
+            {
+              "src": "assets/covenant-ch1/p5_4.webp",
+              "ar": 0.537
+            },
+            {
+              "src": "assets/covenant-ch1/p5_5.webp",
+              "ar": 0.989
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p6_1.webp",
+              "ar": 1.072
+            },
+            {
+              "src": "assets/covenant-ch1/p6_2.webp",
+              "ar": 0.815
+            },
+            {
+              "src": "assets/covenant-ch1/p6_3.webp",
+              "ar": 1.169
+            },
+            {
+              "src": "assets/covenant-ch1/p6_4.webp",
+              "ar": 2.051
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch1/p7_1.webp",
+              "ar": 1.601
+            },
+            {
+              "src": "assets/covenant-ch1/p7_2.webp",
+              "ar": 1.601
+            },
+            {
+              "src": "assets/covenant-ch1/p7_3.webp",
+              "ar": 2.251
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch2",
+      "title": "Walk Toward Danger",
+      "chapter": "Chapter II",
+      "subtitle": "No Mercy For The Crows",
+      "bio": "They called him coward. They mugged a green leaf for fourteen million. The Covenant locked the target — and M125CC walked toward the fire.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch2.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch2/p1_1.webp",
+              "ar": 0.57
+            },
+            {
+              "src": "assets/covenant-ch2/p1_2.webp",
+              "ar": 0.666
+            },
+            {
+              "src": "assets/covenant-ch2/p1_3.webp",
+              "ar": 1.105
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch2/p2_1.webp",
+              "ar": 1.091
+            },
+            {
+              "src": "assets/covenant-ch2/p2_2.webp",
+              "ar": 0.423
+            },
+            {
+              "src": "assets/covenant-ch2/p2_3.webp",
+              "ar": 0.879
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch2/p3_1.webp",
+              "ar": 0.769
+            },
+            {
+              "src": "assets/covenant-ch2/p3_2.webp",
+              "ar": 0.757
+            },
+            {
+              "src": "assets/covenant-ch2/p3_3.webp",
+              "ar": 0.788
+            },
+            {
+              "src": "assets/covenant-ch2/p3_4.webp",
+              "ar": 0.733
+            },
+            {
+              "src": "assets/covenant-ch2/p3_5.webp",
+              "ar": 0.969
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch2/p4_1.webp",
+              "ar": 1.233
+            },
+            {
+              "src": "assets/covenant-ch2/p4_2.webp",
+              "ar": 0.965
+            },
+            {
+              "src": "assets/covenant-ch2/p4_3.webp",
+              "ar": 1.436
+            },
+            {
+              "src": "assets/covenant-ch2/p4_4.webp",
+              "ar": 0.872
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch2/p5_1.webp",
+              "ar": 1.42
+            },
+            {
+              "src": "assets/covenant-ch2/p5_2.webp",
+              "ar": 1.463
+            },
+            {
+              "src": "assets/covenant-ch2/p5_3.webp",
+              "ar": 1.585
+            },
+            {
+              "src": "assets/covenant-ch2/p5_4.webp",
+              "ar": 0.979
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch3",
+      "title": "Crows Never Die",
+      "chapter": "Chapter III",
+      "subtitle": "Covenant Never Forgives",
+      "bio": "The Crows came back and mocked the armor again. Covenant protects its own — three strongholds, one answer: fire.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch3.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch3/p1_1.webp",
+              "ar": 2.133
+            },
+            {
+              "src": "assets/covenant-ch3/p1_2.webp",
+              "ar": 1.688
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch3/p2_1.webp",
+              "ar": 1.069
+            },
+            {
+              "src": "assets/covenant-ch3/p2_2.webp",
+              "ar": 1.069
+            },
+            {
+              "src": "assets/covenant-ch3/p2_3.webp",
+              "ar": 1.004
+            },
+            {
+              "src": "assets/covenant-ch3/p2_4.webp",
+              "ar": 1.51
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch3/p3_1.webp",
+              "ar": 1.649
+            },
+            {
+              "src": "assets/covenant-ch3/p3_2.webp",
+              "ar": 1.514
+            },
+            {
+              "src": "assets/covenant-ch3/p3_3.webp",
+              "ar": 2.234
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch3/p4_1.webp",
+              "ar": 1.378
+            },
+            {
+              "src": "assets/covenant-ch3/p4_2.webp",
+              "ar": 1.07
+            },
+            {
+              "src": "assets/covenant-ch3/p4_3.webp",
+              "ar": 1.993
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch3/p5_1.webp",
+              "ar": 1.57
+            },
+            {
+              "src": "assets/covenant-ch3/p5_2.webp",
+              "ar": 1.219
+            },
+            {
+              "src": "assets/covenant-ch3/p5_3.webp",
+              "ar": 2.27
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch4",
+      "title": "The Silence",
+      "chapter": "Chapter IV",
+      "subtitle": "The Second Might Start One",
+      "bio": "SHAT went quiet — no attacks, no taunts. Covenant reads the silence as a threat. Then a case arrives with a glow, and the second bomb could start the war the first one ended.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch4.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p1_1.webp",
+              "ar": 1.109
+            },
+            {
+              "src": "assets/covenant-ch4/p1_2.webp",
+              "ar": 1.27
+            },
+            {
+              "src": "assets/covenant-ch4/p1_3.webp",
+              "ar": 2.276
+            },
+            {
+              "src": "assets/covenant-ch4/p1_4.webp",
+              "ar": 2.602
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p2_1.webp",
+              "ar": 1.806
+            },
+            {
+              "src": "assets/covenant-ch4/p2_2.webp",
+              "ar": 4.046
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p3_1.webp",
+              "ar": 1.645
+            },
+            {
+              "src": "assets/covenant-ch4/p3_2.webp",
+              "ar": 1.325
+            },
+            {
+              "src": "assets/covenant-ch4/p3_3.webp",
+              "ar": 1.325
+            },
+            {
+              "src": "assets/covenant-ch4/p3_4.webp",
+              "ar": 1.769
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p4_1.webp",
+              "ar": 1.181
+            },
+            {
+              "src": "assets/covenant-ch4/p4_2.webp",
+              "ar": 1.356
+            },
+            {
+              "src": "assets/covenant-ch4/p4_3.webp",
+              "ar": 0.78
+            },
+            {
+              "src": "assets/covenant-ch4/p4_4.webp",
+              "ar": 1.102
+            },
+            {
+              "src": "assets/covenant-ch4/p4_5.webp",
+              "ar": 1.367
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p5_1.webp",
+              "ar": 2.463
+            },
+            {
+              "src": "assets/covenant-ch4/p5_2.webp",
+              "ar": 0.853
+            },
+            {
+              "src": "assets/covenant-ch4/p5_3.webp",
+              "ar": 0.944
+            },
+            {
+              "src": "assets/covenant-ch4/p5_4.webp",
+              "ar": 1.525
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p6_1.webp",
+              "ar": 0.959
+            },
+            {
+              "src": "assets/covenant-ch4/p6_2.webp",
+              "ar": 1.749
+            },
+            {
+              "src": "assets/covenant-ch4/p6_3.webp",
+              "ar": 1.275
+            },
+            {
+              "src": "assets/covenant-ch4/p6_4.webp",
+              "ar": 0.871
+            },
+            {
+              "src": "assets/covenant-ch4/p6_5.webp",
+              "ar": 1.14
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p7_1.webp",
+              "ar": 1.012
+            },
+            {
+              "src": "assets/covenant-ch4/p7_2.webp",
+              "ar": 1.163
+            },
+            {
+              "src": "assets/covenant-ch4/p7_3.webp",
+              "ar": 1.825
+            },
+            {
+              "src": "assets/covenant-ch4/p7_4.webp",
+              "ar": 1.042
+            },
+            {
+              "src": "assets/covenant-ch4/p7_5.webp",
+              "ar": 1.127
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch4/p8_1.webp",
+              "ar": 4.719
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch5",
+      "title": "The Rage Returns",
+      "chapter": "Chapter V",
+      "subtitle": "Silence Was The Warning",
+      "bio": "The silence breaks and the rage returns. SHAT dares them — do it, or no balls. Silence was the warning; the response will be fire.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch5.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p1_1.webp",
+              "ar": 1.046
+            },
+            {
+              "src": "assets/covenant-ch5/p1_2.webp",
+              "ar": 1.228
+            },
+            {
+              "src": "assets/covenant-ch5/p1_3.webp",
+              "ar": 0.712
+            },
+            {
+              "src": "assets/covenant-ch5/p1_4.webp",
+              "ar": 0.658
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p2_1.webp",
+              "ar": 0.865
+            },
+            {
+              "src": "assets/covenant-ch5/p2_2.webp",
+              "ar": 1.049
+            },
+            {
+              "src": "assets/covenant-ch5/p2_3.webp",
+              "ar": 1.131
+            },
+            {
+              "src": "assets/covenant-ch5/p2_4.webp",
+              "ar": 1.135
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p3_1.webp",
+              "ar": 2.071
+            },
+            {
+              "src": "assets/covenant-ch5/p3_2.webp",
+              "ar": 1.221
+            },
+            {
+              "src": "assets/covenant-ch5/p3_3.webp",
+              "ar": 1.239
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p4_1.webp",
+              "ar": 1.352
+            },
+            {
+              "src": "assets/covenant-ch5/p4_2.webp",
+              "ar": 1.07
+            },
+            {
+              "src": "assets/covenant-ch5/p4_3.webp",
+              "ar": 1.578
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p5_1.webp",
+              "ar": 1.162
+            },
+            {
+              "src": "assets/covenant-ch5/p5_2.webp",
+              "ar": 1.117
+            },
+            {
+              "src": "assets/covenant-ch5/p5_3.webp",
+              "ar": 1.171
+            },
+            {
+              "src": "assets/covenant-ch5/p5_4.webp",
+              "ar": 1.162
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch5/p6_1.webp",
+              "ar": 1.365
+            },
+            {
+              "src": "assets/covenant-ch5/p6_2.webp",
+              "ar": 0.982
+            },
+            {
+              "src": "assets/covenant-ch5/p6_3.webp",
+              "ar": 2.329
+            },
+            {
+              "src": "assets/covenant-ch5/p7_1.webp",
+              "ar": 11.77
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch6",
+      "title": "The Last Drop",
+      "chapter": "Chapter VI",
+      "subtitle": "The Agent Of Chaos",
+      "bio": "The challenge returns: do it, or no balls. The last drop falls, the volcano wakes, and another mushroom cloud blooms. CocheasurErO — the agent of chaos, the reason they bleed.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch6.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch6/p1_1.webp",
+              "ar": 7.078
+            },
+            {
+              "src": "assets/covenant-ch6/p1_2.webp",
+              "ar": 8.922
+            },
+            {
+              "src": "assets/covenant-ch6/p2_1.webp",
+              "ar": 1.444
+            },
+            {
+              "src": "assets/covenant-ch6/p2_2.webp",
+              "ar": 0.849
+            },
+            {
+              "src": "assets/covenant-ch6/p2_3.webp",
+              "ar": 1.313
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch6/p3_1.webp",
+              "ar": 1.046
+            },
+            {
+              "src": "assets/covenant-ch6/p3_2.webp",
+              "ar": 1.078
+            },
+            {
+              "src": "assets/covenant-ch6/p3_3.webp",
+              "ar": 1.222
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch6/p4_1.webp",
+              "ar": 1.153
+            },
+            {
+              "src": "assets/covenant-ch6/p4_2.webp",
+              "ar": 0.9
+            },
+            {
+              "src": "assets/covenant-ch6/p4_3.webp",
+              "ar": 1.87
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch6/p5_1.webp",
+              "ar": 1.437
+            },
+            {
+              "src": "assets/covenant-ch6/p5_2.webp",
+              "ar": 1.022
+            },
+            {
+              "src": "assets/covenant-ch6/p5_3.webp",
+              "ar": 1.362
+            }
+          ]
+        },
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch6/p6_1.webp",
+              "ar": 2.901
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "covenant-ch7",
+      "title": "The Scattering",
+      "chapter": "Chapter VII",
+      "subtitle": "Phase One",
+      "bio": "SHAT scattered — territory unknown, leadership missing, balls applying for asylum: rejected. The scattering was just phase one.",
+      "background": "assets/covenant-ch1/background.webp",
+      "cover": "assets/covers/cover-ch7.webp",
+      "pages": [
+        {
+          "panels": [
+            {
+              "src": "assets/covenant-ch7/p1_1.webp",
+              "ar": 1.252
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

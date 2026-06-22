@@ -1,0 +1,127 @@
+{
+  "id": "covenant-chN",
+  "title": "TITLE",
+  "chapter": "Chapter N",
+  "subtitle": "SUBTITLE",
+  "bio": "…",
+  "background": "assets/covenant-chN/background.webp",
+  "cover": "assets/covenant-chN/p1_1.webp",
+  "pages": [
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p1_1.webp",
+          "ar": 1.046
+        },
+        {
+          "src": "assets/covenant-chN/p1_2.webp",
+          "ar": 1.228
+        },
+        {
+          "src": "assets/covenant-chN/p1_3.webp",
+          "ar": 0.712
+        },
+        {
+          "src": "assets/covenant-chN/p1_4.webp",
+          "ar": 0.658
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p2_1.webp",
+          "ar": 0.865
+        },
+        {
+          "src": "assets/covenant-chN/p2_2.webp",
+          "ar": 1.049
+        },
+        {
+          "src": "assets/covenant-chN/p2_3.webp",
+          "ar": 1.131
+        },
+        {
+          "src": "assets/covenant-chN/p2_4.webp",
+          "ar": 1.135
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p3_1.webp",
+          "ar": 2.071
+        },
+        {
+          "src": "assets/covenant-chN/p3_2.webp",
+          "ar": 1.221
+        },
+        {
+          "src": "assets/covenant-chN/p3_3.webp",
+          "ar": 1.239
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p4_1.webp",
+          "ar": 1.352
+        },
+        {
+          "src": "assets/covenant-chN/p4_2.webp",
+          "ar": 1.07
+        },
+        {
+          "src": "assets/covenant-chN/p4_3.webp",
+          "ar": 1.578
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p5_1.webp",
+          "ar": 1.162
+        },
+        {
+          "src": "assets/covenant-chN/p5_2.webp",
+          "ar": 1.117
+        },
+        {
+          "src": "assets/covenant-chN/p5_3.webp",
+          "ar": 1.171
+        },
+        {
+          "src": "assets/covenant-chN/p5_4.webp",
+          "ar": 1.162
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p6_1.webp",
+          "ar": 1.365
+        },
+        {
+          "src": "assets/covenant-chN/p6_2.webp",
+          "ar": 0.982
+        },
+        {
+          "src": "assets/covenant-chN/p6_3.webp",
+          "ar": 2.329
+        }
+      ]
+    },
+    {
+      "panels": [
+        {
+          "src": "assets/covenant-chN/p7_1.webp",
+          "ar": 11.77
+        }
+      ]
+    }
+  ]
+}
