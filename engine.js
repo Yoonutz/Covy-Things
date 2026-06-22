@@ -130,7 +130,7 @@ function acronym(s){return s.split(/\s+/).filter(Boolean).map(w=>w[0]).join('').
 function buildLanding(){
   const s=DATA.series;
   views.landing.innerHTML=
-    '<div class="tags stagger"><span>'+acronym(s.tagline)+'</span><span>Chronicle</span><span>Year Zero</span></div>'+
+    '<div class="tags stagger"><span>Chronicle</span><span>Year Zero</span></div>'+
     '<h1 class="title glitch stagger">'+titleLines(s.title)+'</h1>'+
     '<div class="tagline stagger">'+s.tagline+'</div>'+
     '<div class="rule stagger r"></div>'+
